@@ -18,7 +18,29 @@ module Tape
     end
 
     get '/uploads' do
-      json objects: bucket.objects(delimiter: '/', prefix: 'todo/').map(&:key).keep_if { |obj| obj =~ /.+[^\/]$/i }
+      uploads = bucket.objects(delimiter: '/', prefix: 'todo/').map do |obj|
+        parts = obj.key.split('/')
+        parts.last if parts.count > 1
+      end.compact
+
+      json uploads: uploads
+    end
+
+    get '/uploads/:filename' do
+      obj = bucket.object "todo/#{params[:filename]}"
+
+      if obj.exists?
+        file = Tempfile.new
+
+        obj.get response_target: file.path
+
+        send_file file.path,
+          disposition: 'attachment',
+          filename: params[:filename],
+          type: 'application/octet-stream'
+      else
+        404
+      end
     end
 
     post '/uploads' do
@@ -32,7 +54,7 @@ module Tape
 
         [200, 'ok']
       else
-        [500, 'o no']
+        [500, 'o no u ddn yus wav or mp3']
       end
     end
   end
