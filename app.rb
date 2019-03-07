@@ -58,17 +58,13 @@ module Tape
       end
     end
 
-    post 'uploads/:filename/ok' do
+    post '/uploads/:filename/ok' do
       obj = bucket.object "todo/#{params[:filename]}"
 
       if obj.exists?
-        new_obj = obj.move_to "done/#{params[:filename]}"
+        obj.move_to "itmstore/done/#{params[:filename]}"
 
-        if new_obj.exists?
-          [200, 'ok']
-        else
-          [500, 'ddn mv']
-        end
+        [200, 'ok']
       else
         [500, 'obj ddn exs']
       end
