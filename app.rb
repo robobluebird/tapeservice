@@ -57,5 +57,21 @@ module Tape
         [500, 'o no u ddn yus wav or mp3']
       end
     end
+
+    post 'uploads/:filename/ok' do
+      obj = bucket.object "todo/#{params[:filename]}"
+
+      if obj.exists?
+        new_obj = obj.move_to "done/#{params[:filename]}"
+
+        if new_obj.exists?
+          [200, 'ok']
+        else
+          [500, 'ddn mv']
+        end
+      else
+        [500, 'obj ddn exs']
+      end
+    end
   end
 end

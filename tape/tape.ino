@@ -73,234 +73,21 @@ void tick() {
 }
 
 void transition() {
-  if (turning) {
-    if (digitalRead(2) == 0) {
-      stopMotor();
-      standbyMode();
-      Serial.println(ticks);
-    } else if (true) {
-      stopMotor();
-      standbyMode();
-      Serial.println(ticks);
-    }
-  }
+//  if (turning) {
+//    if (digitalRead(2) == 0) {
+//      stopMotor();
+//      standbyMode();
+//    }
+//  }
 }
 
 void loop() {
   if (turning) {
-    Serial.println(ticks - oldCount);
-    oldCount = ticks;
-    delay(1000);
-//    if (timeout != -1 && millis() - timeout >= 60000) {
-//      stopMotor();
-//      standbyMode();
-//      Serial.println(ticks);
-//    } else if (tickLimit != -1 && ticks >= tickLimit) {
-//      stopMotor();
-//      standbyMode();
-//      Serial.println(ticks);
-//    }
-
-//    if (tickLimit > 0 && ticks >= tickLimit) {
-//      Serial.print("Hit tick limit of ");
-//      Serial.print(tickLimit);
-//      Serial.print(" with ");
-//      Serial.println(ticks);
-//      stopMotor();
-//      standbyMode();
-//      tickLimit = 0;
-//      nextTickLimit = 0;
-//    } else if (startedTurning != -1 && now - startedTurning > 1000) {
-//      if (slowTicks == 0) {
-//        stopMotor();
-//        standbyMode();
-//        Serial.print(now - startedTurning);
-//        Serial.println(" startedTurning distance is greater than 500, stopping.");
-//      } else {
-//        startedTurning = -1;
-//        Serial.println("We have movement so set startedTurning to -1");
-//      }
-//    } else if (now - lastSlowTick > 500) {
-//      Serial.println(now);
-//      Serial.println(lastSlowTick);
-//      Serial.print(now - lastSlowTick);
-//      Serial.println(" slowTick distance is greater than 1000, stopping");
-//
-//      stopMotor();
-//      standbyMode();
-//
-//      if (steps[currentStep + 1] != NULL) {
-//        Serial.print("Preparing to execute step ");
-//        Serial.println(currentStep + 1);
-//        currentStep++;
-//        steps[currentStep]();
-//      } else {
-//        Serial.println("Finished all steps");
-//        currentStep = -1;
-//        clearSteps();
-//      }
-//    } else {
-//    }
-//  } else {
-//    if (steps[currentStep + 1] != NULL) {
-//      Serial.print("Preparing to execute step ");
-//      Serial.println(currentStep + 1);
-//      currentStep++;
-//      steps[currentStep]();
-//    }
-  }
-
-  if (Serial.available()) {
-    char c = Serial.read();
-
-    if (c == '1') {
-      playMode();
-    } else if (c == '2') {
-      playMode2();
-    } else if (c == '3') {
-      fastForwardMode();
-    } else if (c == '4') {
-      reverseMode();
-    } else if (c == '7') {
-      recordMode();
-    } else if (c == '5') {
-      startMotor();
-    } else if (c == '6') {
-      stopMotor();
-    } else if (c == 'l') {
-      tapeLength();
-      steps[0]();
-    } else if (c == 'b') {
-      startOfTape();
-      steps[0]();
-    } else if (c == 'e') {
-      endOfTape();
-      steps[0]();
-    } else if (c == 'a') {
-      advanceTo(60 * 5);
-      steps[0]();
-    } else if (c == 'c') {
-      advanceTo2(60 * 5);
-      steps[0]();
-    } else if (c == 't') {
-      tickTest();
-    } else if (c == 's') {
+    if (tickLimit > 0 && ticks >= tickLimit) {
       stopMotor();
       standbyMode();
-    } else if (c == 'u') {
-      Serial.println(digitalRead(2));
-    }
-
-    // f l u s h
-    while (Serial.available()) {
-      Serial.read();
     }
   }
-}
-
-void tapeLength() {
-  clearSteps();
-
-  steps[0] = startOfUsableTape;
-  steps[1] = endOfUsableTape;
-}
-
-void startOfUsableTape() {
-  clearSteps();
-
-  steps[0] = reverseMode;
-  steps[1] = startMotor;
-  steps[2] = playMode;
-  steps[3] = playMode2;
-  steps[4] = startMotor;
-}
-
-void endOfUsableTape() {
-  steps[0] = fastForwardMode;
-  steps[1] = startMotor;
-}
-
-void calculateLength() {
-//  float windTime = (ticks / TICKS_PER_SECOND) - (ticksAfterUsableTapeFF * 2);
-//  int tapeTime = (windTime * FAST_TAPE_CONSTANT) / 60;
-//
-//  //Wire.write("LEN: %s", tapeLength);
-//  Serial.print("The tape length is ");
-//  Serial.print(tapeTime);
-//  Serial.print(" minutes per side.");
-}
-
-void startOfTape() {
-}
-
-void endOfTape() {
-//  clearSteps();
-//
-//  nextTickLimit = ticksAfterUsableTapeFF;
-//
-//  steps[0] = fastForwardMode;
-//  steps[1] = startMotor;
-//  steps[2] = setTickLimit;
-//  steps[3] = reverseMode;
-//  steps[4] = startMotor;
-}
-
-void timedRecord(int seconds, int startTime = -1) {
-}
-
-void tickTest() {
-//  clearSteps();
-//
-//  nextTickLimit = 46;
-//
-//  steps[0] = reverseMode;
-//  steps[1] = setTickLimit;
-//  steps[2] = startMotor;
-//
-//  steps[0]();
-}
-
-void advanceTo(float seconds) {
-//  clearSteps();
-//
-//  Serial.println(seconds);
-//
-//  seconds = seconds / ff_to_p;
-//
-//  Serial.println(seconds);
-//
-//  nextTickLimit = seconds * TICKS_PER_SECOND;
-//
-//  Serial.println(nextTickLimit);
-//
-//  steps[0] = reverseMode;
-//  steps[1] = startMotor;
-//  steps[2] = setTickLimit;
-//  steps[3] = fastForwardMode;
-//  steps[4] = startMotor;
-}
-
-void advanceTo2(float seconds) {
-//  clearSteps();
-//
-//  Serial.println(seconds);
-//
-//  nextTickLimit = seconds * TICKS_PER_SECOND;
-//
-//  Serial.println(nextTickLimit);
-//
-//  steps[0] = reverseMode;
-//  steps[1] = startMotor;
-//  steps[2] = setTickLimit;
-//  steps[3] = playMode;
-//  steps[4] = playMode2;
-//  steps[5] = startMotor;
-}
-
-void setTickLimit() {
-  tickLimit = nextTickLimit;
-
-  delay(500);
 }
 
 void clearSteps() {
@@ -308,7 +95,7 @@ void clearSteps() {
     steps[i] = NULL;
   }
 
-  currentStep = 0;
+  currentStep = -1;
 }
 
 void startMotor() {
@@ -356,7 +143,6 @@ void playMode() {
 }
 
 void playMode2() {
-  // debounce = 50;
   playServo.write(140);
   eraseServo.write(60);
   reverseServo.write(90);
@@ -374,6 +160,17 @@ void recordMode() {
   delay(1000);
 }
 
+void playModeFun() {
+  clearSteps();
+
+  steps[0] = playMode;
+  steps[1] = playMode2;
+
+  for (int i = 0; i < 2; i++) {
+    steps[i]();
+  }
+}
+
 // callback for received data
 void receiveData(int byteCount) {
   while (Wire.available()) {
@@ -384,14 +181,13 @@ void receiveData(int byteCount) {
         playMode();
         break;
       case 2:
-        playMode2();
-        // recordMode();
-        break;
-      case 3:
         fastForwardMode();
         break;
-      case 4:
+      case 3:
         reverseMode();
+        break;
+      case 4:
+        recordMode();
         break;
       case 5:
         startMotor();
@@ -400,7 +196,8 @@ void receiveData(int byteCount) {
         stopMotor();
         break;
       case 7:
-        tapeLength();
+         playMode2();
+         break;
       default:
         standbyMode();
         break;
