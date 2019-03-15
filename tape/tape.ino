@@ -8,8 +8,6 @@ Servo recordServo;
 
 #define WIRE_ADDRESS 0x04
 
-// 3 15 23
-
 int number = 0;
 volatile int ticks = 0;
 long lastTick = 0;
@@ -23,6 +21,7 @@ int nextTickLimit = 0;
 int count = 0;
 int mode = 0;
 long last = -1;
+String responseContent = "";
 
 bool turning = false;
 
@@ -73,12 +72,12 @@ void tick() {
 }
 
 void transition() {
-//  if (turning) {
-//    if (digitalRead(2) == 0) {
-//      stopMotor();
-//      standbyMode();
-//    }
-//  }
+  //  if (turning) {
+  //    if (digitalRead(2) == 0) {
+  //      stopMotor();
+  //      standbyMode();
+  //    }
+  //  }
 }
 
 void loop() {
@@ -160,18 +159,6 @@ void recordMode() {
   delay(1000);
 }
 
-void playModeFun() {
-  clearSteps();
-
-  steps[0] = playMode;
-  steps[1] = playMode2;
-
-  for (int i = 0; i < 2; i++) {
-    steps[i]();
-  }
-}
-
-// callback for received data
 void receiveData(int byteCount) {
   while (Wire.available()) {
     number = Wire.read();
@@ -194,12 +181,15 @@ void receiveData(int byteCount) {
         break;
       case 6:
         stopMotor();
+        responseContent = String(ticks);
         break;
       case 7:
-         playMode2();
-         break;
+        playMode2();
+        break;
+      case 't':
+        Serial.println("bep");
+        number = digitalRead(2);
       default:
-        standbyMode();
         break;
     }
   }
@@ -207,5 +197,10 @@ void receiveData(int byteCount) {
 
 // callback for sending data
 void sendData() {
-  Wire.write(number);
+  if (responseContent != "") {
+    Wire.write(responseContent.c_str());
+    responseContent = "";
+  } else {
+    Wire.write(number);
+  }
 }
