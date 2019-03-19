@@ -24,8 +24,9 @@ int mode = 0;
 long last = -1;
 String responseContent = "";
 
-bool rewindTest = false;
+volatile bool rewindTest = false;
 bool turning = false;
+volatile bool n = false;
 
 void (*steps[10])(void);
 
@@ -78,45 +79,69 @@ void transition() {
     if (digitalRead(2) == 0) {
       stopMotor();
       standbyMode();
-      notifyOfStartOfTape(); 
     } else {
-      if (rewindTest) {
+      if (rewindTest && mode == 3) {
+        n = true;
         rewindTest = false;
+        stopMotor();
+        standbyMode();
       }
     }
   }
 }
 
 void loop() {
+  
+  
+  if (Serial.available()) {
+    char c = Serial.read();
+
+    if (c == 'u') {
+      Serial.println(digitalRead(2));
+    } else if (c == 's') {
+      notifyStartOfTape();
+    } else if (c == 'r') {
+      startOfTape();
+    } else if (c == '1') {
+      stopMotor();
+      standbyMode();
+    }
+  }
+  
+  if (n) {
+    notifyStartOfTape();
+  }
+  
   if (turning) {
     if (tickLimit > 0 && ticks >= tickLimit) {
       stopMotor();
       standbyMode();
-      
-      // trigger interrupt on pi that lets it know we're done
-    } else if (rewindTest && millis() - rewindTime > 2000) {
-      // failed to cross a boundary in two seconds
-      // which probs means we are at the beginning of the tape
+    } else if (rewindTest && rewindTime > 0 && millis() - rewindTime > 2000) {
       stopMotor();
       standbyMode();
-      notifyOfStartOfTape();
+      rewindTime = 0;
     }
   } else {
     if (steps[currentStep + 1] != NULL) {
       currentStep++;
 
-      if (rewindTest && steps[currentStep] == startMotor) {
+      if (rewindTest && steps[currentStep - 1] == reverseMode && steps[currentStep] == startMotor) {
         rewindTime = millis();
       }
-      
+
       steps[currentStep]();
     }
   }
 }
 
 void notifyStartOfTape() {
-  digitalWrite(4, HIGH);
-  digitalWrite(4, LOW);
+  long t = millis();
+
+  digitalWrite(6, HIGH);
+
+  delay(500);
+  
+  digitalWrite(6, LOW);
 }
 
 void clearSteps() {
@@ -129,22 +154,24 @@ void clearSteps() {
 
 void startOfTape() {
   clearSteps();
-  
+
   if (digitalRead(2) == 0) {
     rewindTest = true;
-    
-    steps[0] = rewindMode;
-    steps[1] = startMotor;
-    steps
-  } else {
-    steps[0] = rewindMode;
-    steps[1] = startMotor;
 
-    steps[currentStep]();
+    steps[0] = reverseMode;
+    steps[1] = startMotor;
+    steps[2] = playMode;
+    steps[3] = playMode2;
+    steps[4] = startMotor;
+  } else {
+    steps[0] = reverseMode;
+    steps[1] = startMotor;
   }
+
+  steps[currentStep]();
 }
 
-void setTickLimit(t) {
+void setTickLimit(int t) {
 }
 
 void startMotor() {
@@ -160,17 +187,36 @@ void stopMotor() {
   turning = false;
 }
 
+void standbyMode() {
+  fastForwardMode();
+  mode = 0;
+}
+
 void fastForwardMode() {
   playServo.write(60);
   eraseServo.write(60);
   reverseServo.write(90);
   recordServo.write(90);
-  mode = 3;
+  mode = 1;
   delay(1000);
 }
 
-void standbyMode() {
-  fastForwardMode();
+void playMode() {
+  playServo.write(165);
+  eraseServo.write(60);
+  reverseServo.write(90);
+  recordServo.write(90);
+  mode = 2;
+  delay(1000);
+}
+
+void playMode2() {
+  playServo.write(140);
+  eraseServo.write(60);
+  reverseServo.write(90);
+  recordServo.write(90);
+  mode = 3;
+  delay(1000);
 }
 
 void reverseMode() {
@@ -182,30 +228,12 @@ void reverseMode() {
   delay(1000);
 }
 
-void playMode() {
-  playServo.write(165);
-  eraseServo.write(60);
-  reverseServo.write(90);
-  recordServo.write(90);
-  mode = 1;
-  delay(1000);
-}
-
-void playMode2() {
-  playServo.write(140);
-  eraseServo.write(60);
-  reverseServo.write(90);
-  recordServo.write(90);
-  mode = 2;
-  delay(1000);
-}
-
 void recordMode() {
   playServo.write(140);
   eraseServo.write(145);
   reverseServo.write(90);
   recordServo.write(70);
-  mode = 7;
+  mode = 5;
   delay(1000);
 }
 
@@ -237,9 +265,7 @@ void receiveData(int byteCount) {
         playMode2();
         break;
       case 8:
-        // read the tape diode
-        Serial.println("bep");
-        number = digitalRead(2);
+        startOfTape();
         break;
       default:
         break;
