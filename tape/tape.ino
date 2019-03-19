@@ -10,6 +10,7 @@ Servo recordServo;
 
 int number = 0;
 volatile int ticks = 0;
+long rewindTime = 0;
 long lastTick = 0;
 long startedTurning = -1;
 long timeout = -1;
@@ -23,6 +24,7 @@ int mode = 0;
 long last = -1;
 String responseContent = "";
 
+bool rewindTest = false;
 bool turning = false;
 
 void (*steps[10])(void);
@@ -72,12 +74,17 @@ void tick() {
 }
 
 void transition() {
-  //  if (turning) {
-  //    if (digitalRead(2) == 0) {
-  //      stopMotor();
-  //      standbyMode();
-  //    }
-  //  }
+  if (turning) {
+    if (digitalRead(2) == 0) {
+      stopMotor();
+      standbyMode();
+      notifyOfStartOfTape(); 
+    } else {
+      if (rewindTest) {
+        rewindTest = false;
+      }
+    }
+  }
 }
 
 void loop() {
@@ -85,8 +92,31 @@ void loop() {
     if (tickLimit > 0 && ticks >= tickLimit) {
       stopMotor();
       standbyMode();
+      
+      // trigger interrupt on pi that lets it know we're done
+    } else if (rewindTest && millis() - rewindTime > 2000) {
+      // failed to cross a boundary in two seconds
+      // which probs means we are at the beginning of the tape
+      stopMotor();
+      standbyMode();
+      notifyOfStartOfTape();
+    }
+  } else {
+    if (steps[currentStep + 1] != NULL) {
+      currentStep++;
+
+      if (rewindTest && steps[currentStep] == startMotor) {
+        rewindTime = millis();
+      }
+      
+      steps[currentStep]();
     }
   }
+}
+
+void notifyStartOfTape() {
+  digitalWrite(4, HIGH);
+  digitalWrite(4, LOW);
 }
 
 void clearSteps() {
@@ -95,6 +125,26 @@ void clearSteps() {
   }
 
   currentStep = -1;
+}
+
+void startOfTape() {
+  clearSteps();
+  
+  if (digitalRead(2) == 0) {
+    rewindTest = true;
+    
+    steps[0] = rewindMode;
+    steps[1] = startMotor;
+    steps
+  } else {
+    steps[0] = rewindMode;
+    steps[1] = startMotor;
+
+    steps[currentStep]();
+  }
+}
+
+void setTickLimit(t) {
 }
 
 void startMotor() {
@@ -186,9 +236,11 @@ void receiveData(int byteCount) {
       case 7:
         playMode2();
         break;
-      case 't':
+      case 8:
+        // read the tape diode
         Serial.println("bep");
         number = digitalRead(2);
+        break;
       default:
         break;
     }
