@@ -25,8 +25,8 @@ long last = -1;
 String responseContent = "";
 
 volatile bool rewindTest = false;
-bool turning = false;
-volatile bool n = false;
+volatile bool turning = false;
+volatile bool stopTurning = false;
 
 void (*steps[10])(void);
 
@@ -77,22 +77,17 @@ void tick() {
 void transition() {
   if (turning) {
     if (digitalRead(2) == 0) {
-      stopMotor();
-      standbyMode();
+      stopTurning = true;
     } else {
       if (rewindTest && mode == 3) {
-        n = true;
         rewindTest = false;
-        stopMotor();
-        standbyMode();
+        stopTurning = true;
       }
     }
   }
 }
 
 void loop() {
-  
-  
   if (Serial.available()) {
     char c = Serial.read();
 
@@ -108,12 +103,12 @@ void loop() {
     }
   }
   
-  if (n) {
-    notifyStartOfTape();
-  }
-  
   if (turning) {
-    if (tickLimit > 0 && ticks >= tickLimit) {
+    if (stopTurning) {
+      stopMotor();
+      standbyMode();
+      stopTurning = false;
+    } else if (tickLimit > 0 && ticks >= tickLimit) {
       stopMotor();
       standbyMode();
     } else if (rewindTest && rewindTime > 0 && millis() - rewindTime > 2000) {
@@ -136,11 +131,8 @@ void loop() {
 
 void notifyStartOfTape() {
   long t = millis();
-
   digitalWrite(6, HIGH);
-
   delay(500);
-  
   digitalWrite(6, LOW);
 }
 
@@ -163,15 +155,12 @@ void startOfTape() {
     steps[2] = playMode;
     steps[3] = playMode2;
     steps[4] = startMotor;
+    steps[5] = notifyStartOfTape;
   } else {
     steps[0] = reverseMode;
     steps[1] = startMotor;
+    steps[2] = notifyStartOfTape;
   }
-
-  steps[currentStep]();
-}
-
-void setTickLimit(int t) {
 }
 
 void startMotor() {
