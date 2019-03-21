@@ -27,6 +27,7 @@ String responseContent = "";
 volatile bool rewindTest = false;
 volatile bool turning = false;
 volatile bool stopTurning = false;
+volatile bool endOfTape = false;
 
 void (*steps[10])(void);
 
@@ -83,6 +84,7 @@ void transition() {
         rewindTest = false;
         stopTurning = true;
       } else if (mode == 5) {
+        endOfTape = true;
       }
     }
   }
@@ -105,7 +107,12 @@ void loop() {
   }
   
   if (turning) {
-    if (stopTurning) {
+    if (endOfTape) {
+      stopMotor();
+      standbyMode();
+      endOfTape = false;
+      notifyEndOfTape();
+    } else if (stopTurning) {
       stopMotor();
       standbyMode();
       stopTurning = false;
@@ -131,10 +138,15 @@ void loop() {
 }
 
 void notifyStartOfTape() {
-  long t = millis();
   digitalWrite(6, HIGH);
   delay(500);
   digitalWrite(6, LOW);
+}
+
+void notifyEndOfTape() {
+  digitalWrite(5, HIGH);
+  delay(500);
+  digitalWrite(5, LOW);
 }
 
 void clearSteps() {
