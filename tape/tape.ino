@@ -82,6 +82,7 @@ void transition() {
       if (rewindTest && mode == 3) {
         rewindTest = false;
         stopTurning = true;
+      } else if (mode == 5) {
       }
     }
   }

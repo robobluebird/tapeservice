@@ -2,6 +2,7 @@
 require 'sinatra/base'
 require 'sinatra/json'
 require 'aws-sdk'
+require 'csv'
 
 module Tape
   class App < Sinatra::Base
@@ -49,7 +50,6 @@ module Tape
 
       if filename.end_with? '.wav', '.mp3'
         obj = bucket.object "todo/#{filename}"
-
         obj.upload_file file
 
         [200, 'ok']
@@ -68,6 +68,44 @@ module Tape
       else
         [500, 'obj ddn exs']
       end
+    end
+
+    get '/tapes' do
+      tapes = bucket.objects(delimiter: '/', prefix: 'tapes/').map do |obj|
+        parts = obj.key.split('/')
+        parts.last if parts.count > 1
+      end.compact
+
+      json tapes: tapes
+    end
+
+    get '/tapes/:tape_id' do
+      obj = bucket.object "tapes/#{params[:tape_id]}"
+
+      if obj.exists?
+        file = Tempfile.new
+        obj.get response_target: file.path
+        tape = JSON.parse file.read
+
+        json tape: tape
+      else
+        404
+      end
+    end
+
+    post '/tapes' do
+      tape = { name: params[:name], length: params[:length], side_a: [], side_b: [] }
+
+      file = Tempfile.new
+      file.write JSON.pretty_generate tape
+
+      obj = bucket.object "tapes/#{params[:name]}"
+      obj.upload_file file
+
+      [200, 'ok']
+    end
+
+    put '/tapes/:tape_id' do
     end
   end
 end
