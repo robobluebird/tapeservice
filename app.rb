@@ -2,7 +2,6 @@
 require 'sinatra/base'
 require 'sinatra/json'
 require 'aws-sdk'
-require 'csv'
 
 module Tape
   class App < Sinatra::Base
@@ -94,7 +93,12 @@ module Tape
     end
 
     post '/tapes' do
-      tape = { name: params[:name], length: params[:length], side_a: [], side_b: [] }
+      tape = {
+        name: params[:name],
+        ticks: params[:ticks],
+        side_a: [],
+        side_b: []
+      }
 
       file = Tempfile.new
       file.write JSON.pretty_generate tape
@@ -102,10 +106,23 @@ module Tape
       obj = bucket.object "tapes/#{params[:name]}"
       obj.upload_file file
 
-      [200, 'ok']
+      json tape: tape
     end
 
     put '/tapes/:tape_id' do
+      obj = bucket.object "tapes/#{params[:tape_id]}"
+
+      if obj.exists?
+        file = Tempfile.new
+        obj.get response_target: file.path
+        tape = JSON.parse file.read
+
+        # add new info and re-up
+
+        json tape: tape
+      else
+        404
+      end
     end
   end
 end

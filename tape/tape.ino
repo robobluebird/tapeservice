@@ -11,25 +11,25 @@ Servo recordServo;
 int number = 0;
 volatile int ticks = 0;
 long rewindTime = 0;
-long lastTick = 0;
-long startedTurning = -1;
-long timeout = -1;
-int currentStep = -1;
-int oldCount = 0;
-int largestDelay = 0;
+int stepIndex = -1;
+int taskIndex = -1;
 int tickLimit = -1;
-int nextTickLimit = 0;
-int count = 0;
 int mode = 0;
 long last = -1;
-String responseContent = "";
+char action[20];
 
-volatile bool rewindTest = false;
-volatile bool turning = false;
-volatile bool stopTurning = false;
-volatile bool endOfTape = false;
+bool rewindTest = false;
+bool turning = false;
+bool stopTurning = false;
+bool endOfTape = false;
+bool checkLength = false;
+
+volatile int check = -1;
+
+int checkCount = 0;
 
 void (*steps[10])(void);
+void (*tasks[10])(void);
 
 void setup() {
   clearSteps();
@@ -37,6 +37,8 @@ void setup() {
   Serial.begin(9600);
 
   pinMode(7, OUTPUT);
+  pinMode(6, OUTPUT);
+  pinMode(5, OUTPUT);
 
   Serial.begin(9600);
 
@@ -77,41 +79,56 @@ void tick() {
 
 void transition() {
   if (turning) {
-    if (digitalRead(2) == 0) {
-      stopTurning = true;
-    } else {
-      if (rewindTest && mode == 3) {
-        rewindTest = false;
-        stopTurning = true;
-      } else if (mode == 5) {
-        endOfTape = true;
-      }
-    }
+    check = digitalRead(2);
   }
 }
 
 void loop() {
-  if (Serial.available()) {
-    char c = Serial.read();
-
-    if (c == 'u') {
-      Serial.println(digitalRead(2));
-    } else if (c == 's') {
-      notifyStartOfTape();
-    } else if (c == 'r') {
-      startOfTape();
-    } else if (c == '1') {
-      stopMotor();
-      standbyMode();
-    }
-  }
-  
   if (turning) {
+    if (check > -1) {
+      if (digitalRead(2) == check) {
+        checkCount++;
+
+        if (checkCount >= 1500) {
+          if (check == 0) {
+            if (mode == 1 || mode == 2 || mode == 3 || mode == 5) {
+              endOfTape = true;
+            } else {
+              stopTurning = true;
+            }
+          } else {
+            if (rewindTest) {
+              if (mode == 3) {
+                stopTurning = true;
+              } else if (mode == 4) {
+                rewindTime = 0;
+                clearSteps();
+                steps[0] = notifyStartOfTape;
+              }
+
+              rewindTest = false;
+            }
+          }
+
+          check = -1;
+          checkCount = 0;
+        }
+      } else {
+        check = -1;
+        checkCount = 0;
+      }
+    }
+
     if (endOfTape) {
       stopMotor();
       standbyMode();
       endOfTape = false;
-      notifyEndOfTape();
+
+      if (checkLength) {
+        checkLength = false;
+      } else {
+        notifyEndOfTape();
+      }
     } else if (stopTurning) {
       stopMotor();
       standbyMode();
@@ -125,28 +142,57 @@ void loop() {
       rewindTime = 0;
     }
   } else {
-    if (steps[currentStep + 1] != NULL) {
-      currentStep++;
+    if (steps[stepIndex + 1] != NULL) {
+      stepIndex++;
 
-      if (rewindTest && steps[currentStep - 1] == reverseMode && steps[currentStep] == startMotor) {
+      if (rewindTest && steps[stepIndex - 1] == reverseMode && steps[stepIndex] == startMotor) {
         rewindTime = millis();
       }
 
-      steps[currentStep]();
+      steps[stepIndex]();
+    } else {
+      clearSteps();
+
+      if (tasks[taskIndex + 1] != NULL) {
+        taskIndex++;
+
+        tasks[taskIndex]();
+      } else {
+        clearTasks();
+      }
     }
   }
 }
 
 void notifyStartOfTape() {
-  digitalWrite(6, HIGH);
-  delay(500);
-  digitalWrite(6, LOW);
+  sprintf(action, "start");
+  notify();
 }
 
 void notifyEndOfTape() {
-  digitalWrite(5, HIGH);
+  sprintf(action, "end");
+  notify();
+}
+
+void notifyTapeLength() {
+  sprintf(action, "length:%d", ticks);
+  notify();
+}
+
+void notifyOutOfSpace() {
+  sprintf(action, "space");
+  notify();
+}
+
+void notifyDone() {
+  sprintf(action, "done");
+  notify();
+}
+
+void notify() {
+  digitalWrite(6, HIGH);
   delay(500);
-  digitalWrite(5, LOW);
+  digitalWrite(6, LOW);
 }
 
 void clearSteps() {
@@ -154,7 +200,22 @@ void clearSteps() {
     steps[i] = NULL;
   }
 
-  currentStep = -1;
+  stepIndex = -1;
+}
+
+void clearTasks() {
+  for (int i = 0; i < 10; i++) {
+    tasks[i] = NULL;
+  }
+
+  taskIndex = -1;
+}
+
+void newTape() {
+  clearTasks();
+
+  tasks[0] = startOfTapeSilent;
+  tasks[1] = tapeLength;
 }
 
 void startOfTape() {
@@ -176,10 +237,35 @@ void startOfTape() {
   }
 }
 
+void startOfTapeSilent() {
+  clearSteps();
+
+  if (digitalRead(2) == 0) {
+    rewindTest = true;
+
+    steps[0] = reverseMode;
+    steps[1] = startMotor;
+    steps[2] = playMode;
+    steps[3] = playMode2;
+    steps[4] = startMotor;
+  } else {
+    steps[0] = reverseMode;
+    steps[1] = startMotor;
+  }
+}
+
+void tapeLength() {
+  clearSteps();
+
+  checkLength = true;
+  
+  steps[0] = fastForwardMode;
+  steps[1] = startMotor;
+  steps[2] = notifyTapeLength;
+}
+
 void startMotor() {
   digitalWrite(7, HIGH);
-  // timeout = millis();
-  startedTurning = millis();
   turning = true;
   ticks = 0;
 }
@@ -261,13 +347,20 @@ void receiveData(int byteCount) {
         break;
       case 6:
         stopMotor();
-        responseContent = String(ticks);
         break;
       case 7:
         playMode2();
         break;
       case 8:
         startOfTape();
+        break;
+      case 9:
+        if (strcmp(action, "") == 0) {
+          sprintf(action, "nothing");
+        }
+        break;
+      case 10:
+        newTape();
         break;
       default:
         break;
@@ -277,9 +370,9 @@ void receiveData(int byteCount) {
 
 // callback for sending data
 void sendData() {
-  if (responseContent != "") {
-    Wire.write(responseContent.c_str());
-    responseContent = "";
+  if (strcmp(action, "") != 0) {
+    Wire.write(action);
+    sprintf(action, "");
   } else {
     Wire.write(number);
   }
