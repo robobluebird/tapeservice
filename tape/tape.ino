@@ -175,7 +175,7 @@ void notifyEndOfTape() {
 }
 
 void notifyTapeLength() {
-  sprintf(action, "length:%d", ticks);
+  sprintf(action, "ticks:%d", ticks);
   notify();
 }
 
@@ -361,6 +361,9 @@ void receiveData(int byteCount) {
         break;
       case 10:
         newTape();
+        break;
+      case 11:
+        sprintf(action, "ticks:%d", ticks);
         break;
       default:
         break;

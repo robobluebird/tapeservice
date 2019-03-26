@@ -9,6 +9,10 @@ module Tape
       @bucket ||= Aws::S3::Resource.new(region: 'us-east-2').bucket('itmstore')
     end
 
+    def error reason
+      [500, {'Content-Type' => 'application/json'}, {error: reason}.to_json]
+    end
+
     get '/' do
       erb :index
     end
@@ -47,14 +51,23 @@ module Tape
       filename = params[:file][:filename]
       file = params[:file][:tempfile]
 
-      if filename.end_with? '.wav', '.mp3'
-        obj = bucket.object "todo/#{filename}"
-        obj.upload_file file
+      obj = bucket.object "todo/#{filename}"
 
-        [200, 'ok']
+      if obj.exists?
+        @status = 400
+        @error = "there is a file already queued with this name, \
+                  is it possible this is a duplicate? If not (or you \
+                  want a duplicate) please rename the file to something unique first."
       else
-        [500, 'o no u ddn yus wav or mp3']
+        if obj.upload_file file
+          halt [200, 'ok']
+        else
+          @status = 500
+          @error = 'there was a problem uploading the file'
+        end
       end
+
+      erb :error
     end
 
     post '/uploads/:filename/ok' do
@@ -65,7 +78,7 @@ module Tape
 
         [200, 'ok']
       else
-        [500, 'obj ddn exs']
+        error 'obj ddn exs'
       end
     end
 
@@ -82,9 +95,7 @@ module Tape
       obj = bucket.object "tapes/#{params[:tape_id]}"
 
       if obj.exists?
-        file = Tempfile.new
-        obj.get response_target: file.path
-        tape = JSON.parse file.read
+        tape = JSON.parse obj.get.body.read
 
         json tape: tape
       else
@@ -100,26 +111,38 @@ module Tape
         side_b: []
       }
 
-      file = Tempfile.new
-      file.write JSON.pretty_generate tape
-
       obj = bucket.object "tapes/#{params[:name]}"
-      obj.upload_file file
 
-      json tape: tape
+      if obj.put body: JSON.pretty_generate(tape)
+        json tape: tape
+      else
+        error 'o no'
+      end
     end
 
     put '/tapes/:tape_id' do
       obj = bucket.object "tapes/#{params[:tape_id]}"
 
+      if params[:filename].nil? || params[:side].nil? || params[:ticks].nil?
+        halt error 'bd npt'
+      end
+
       if obj.exists?
-        file = Tempfile.new
-        obj.get response_target: file.path
-        tape = JSON.parse file.read
+        tape = JSON.parse obj.get.body.read
+        side = "side_#{params[:side]}"
+        next_position = (tape[side].collect { |a| a["position"] }.max || 0) + 1
 
-        # add new info and re-up
+        item = { position: next_position,
+                 name: params[:filename],
+                 ticks: params[:ticks].to_i }
 
-        json tape: tape
+        tape[side] << item
+
+        if obj.put body: JSON.pretty_generate(tape)
+          json tape: tape
+        else
+          error 'o no'
+        end
       else
         404
       end
