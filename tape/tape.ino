@@ -89,18 +89,24 @@ void loop() {
       if (digitalRead(2) == check) {
         checkCount++;
 
-        if (checkCount >= 1500) {
+        if (checkCount >= 1800) {
           if (check == 0) {
             if (mode == 1 || mode == 2 || mode == 3 || mode == 5) {
+              Serial.println("3");
               endOfTape = true;
             } else {
+              Serial.println("4");
+              long t = millis();
+              while (millis() - t < 500) {}
               stopTurning = true;
             }
           } else {
             if (rewindTest) {
               if (mode == 3) {
+                Serial.println("5");
                 stopTurning = true;
               } else if (mode == 4) {
+                Serial.println("6");
                 rewindTime = 0;
                 clearSteps();
                 steps[0] = notifyStartOfTape;
@@ -120,11 +126,13 @@ void loop() {
     }
 
     if (endOfTape) {
+      Serial.println("1");
       stopMotor();
       standbyMode();
       endOfTape = false;
 
       if (checkLength) {
+        Serial.println("2");
         checkLength = false;
       } else {
         notifyEndOfTape();
@@ -242,23 +250,22 @@ void startOfTapeSilent() {
 
   if (digitalRead(2) == 0) {
     rewindTest = true;
-
-    steps[0] = reverseMode;
-    steps[1] = startMotor;
-    steps[2] = playMode;
-    steps[3] = playMode2;
-    steps[4] = startMotor;
-  } else {
-    steps[0] = reverseMode;
-    steps[1] = startMotor;
   }
+  
+  steps[0] = reverseMode;
+  steps[1] = startMotor;
+  steps[2] = playMode;
+  steps[3] = playMode2;
+  steps[4] = startMotor;
 }
 
 void tapeLength() {
   clearSteps();
 
-  checkLength = true;
+  Serial.println("7");
   
+  checkLength = true;
+
   steps[0] = fastForwardMode;
   steps[1] = startMotor;
   steps[2] = notifyTapeLength;
