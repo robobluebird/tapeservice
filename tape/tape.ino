@@ -97,7 +97,7 @@ void loop() {
             } else {
               Serial.println("4");
               long t = millis();
-              while (millis() - t < 500) {}
+              delay(500);
               stopTurning = true;
             }
           } else {
@@ -138,6 +138,7 @@ void loop() {
         notifyEndOfTape();
       }
     } else if (stopTurning) {
+      Serial.println("8");
       stopMotor();
       standbyMode();
       stopTurning = false;
@@ -145,6 +146,7 @@ void loop() {
       stopMotor();
       standbyMode();
     } else if (rewindTest && rewindTime > 0 && millis() - rewindTime > 2000) {
+      Serial.println("9");
       stopMotor();
       standbyMode();
       rewindTime = 0;
@@ -183,6 +185,7 @@ void notifyEndOfTape() {
 }
 
 void notifyTapeLength() {
+  Serial.println("bep");
   sprintf(action, "ticks:%d", ticks);
   notify();
 }
