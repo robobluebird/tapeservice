@@ -140,7 +140,7 @@ module Tape
       if request.accept? 'text/html'
         erb :tape
       else
-        json tapes: @tape
+        json tape: tape
       end
     end
 
