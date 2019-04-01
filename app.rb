@@ -1,4 +1,3 @@
-# app.rb
 require 'sinatra/base'
 require 'sinatra/json'
 require 'aws-sdk'
@@ -156,9 +155,15 @@ module Tape
                  ticks: params[:ticks].to_i }
 
         tape[side]['tracks'] << item
-      end
 
-      tape[side]['complete'] = params[:complete] if params[:complete]
+        if tape[side]['tracks'].reduce(0) { |mem, obj| mem += obj['ticks'].to_i } >= tape['ticks'].to_i / 2
+          tape[side]['complete'] = true
+        end
+      elsif params[:complete]
+        tape[side]['complete'] = params[:complete]
+      else
+        halt json tape: tape
+      end
 
       if obj.put body: JSON.pretty_generate(tape)
         json tape: tape
