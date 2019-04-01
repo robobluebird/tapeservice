@@ -13,16 +13,31 @@ module Tape
       [500, {'Content-Type' => 'application/json'}, {error: reason}.to_json]
     end
 
-    get '/' do
-      erb :index
+    def obj
+      @obj ||= begin
+                 obj = bucket.object "tapes/#{params[:tape_id]}"
+                 obj if obj.exists?
+               end
     end
 
-    get '/uploads/new' do
+    def tape
+      @tape ||= JSON.parse(obj.get.body.read) if obj
+    end
+
+    before '/tapes/:tape_id*' do
+      halt 404, 'tape not found!' if tape.nil?
+    end
+
+    get '/' do
+      redirect to '/tapes'
+    end
+
+    get '/tapes/:tape_id/uploads/new' do
       erb :upload
     end
 
-    get '/uploads' do
-      uploads = bucket.objects(delimiter: '/', prefix: 'todo/').map do |obj|
+    get '/tapes/:tape_id/uploads' do
+      uploads = bucket.objects(delimiter: '/', prefix: "todo/#{params[:tape_id]}/").map do |obj|
         parts = obj.key.split('/')
         parts.last if parts.count > 1
       end.compact
@@ -30,8 +45,8 @@ module Tape
       json uploads: uploads
     end
 
-    get '/uploads/:filename' do
-      obj = bucket.object "todo/#{params[:filename]}"
+    get '/tapes/:tape_id/uploads/:filename' do
+      obj = bucket.object "todo/#{params[:tape_id]}/#{params[:filename]}"
 
       if obj.exists?
         file = Tempfile.new
@@ -47,11 +62,11 @@ module Tape
       end
     end
 
-    post '/uploads' do
+    post '/tapes/:tape_id/uploads' do
       filename = params[:file][:filename]
       file = params[:file][:tempfile]
 
-      obj = bucket.object "todo/#{filename}"
+      obj = bucket.object "todo/#{params[:tape_id]}/#{filename}"
 
       if obj.exists?
         @status = 400
@@ -70,11 +85,11 @@ module Tape
       erb :error
     end
 
-    post '/uploads/:filename/ok' do
-      obj = bucket.object "todo/#{params[:filename]}"
+    post '/tapes/:tape_id/uploads/:filename/ok' do
+      obj = bucket.object "todo/#{params[:tape_id]}/#{params[:filename]}"
 
       if obj.exists?
-        obj.move_to "itmstore/done/#{params[:filename]}"
+        obj.move_to "itmstore/done/#{params[:tape_id]}/#{params[:filename]}"
 
         [200, 'ok']
       else
@@ -83,23 +98,15 @@ module Tape
     end
 
     get '/tapes' do
-      tapes = bucket.objects(delimiter: '/', prefix: 'tapes/').map do |obj|
+      @tapes = bucket.objects(delimiter: '/', prefix: 'tapes/').map do |obj|
         parts = obj.key.split('/')
         parts.last if parts.count > 1
       end.compact
 
-      json tapes: tapes
-    end
-
-    get '/tapes/:tape_id' do
-      obj = bucket.object "tapes/#{params[:tape_id]}"
-
-      if obj.exists?
-        tape = JSON.parse obj.get.body.read
-
-        json tape: tape
+      if request.accept? 'text/html'
+        erb :tapes
       else
-        404
+        json tapes: @tapes
       end
     end
 
@@ -126,32 +133,37 @@ module Tape
       end
     end
 
-    put '/tapes/:tape_id/side/:side' do
-      obj = bucket.object "tapes/#{params[:tape_id]}"
+    get '/tapes/:tape_id/check' do
+      200
+    end
 
-      if obj.exists?
-        tape = JSON.parse obj.get.body.read
-        side = "side_#{params[:side]}"
-
-        if params[:filename]
-          next_position = (tape[side].collect { |a| a["position"] }.max || 0) + 1
-
-          item = { position: next_position,
-                   name: params[:filename],
-                   ticks: params[:ticks].to_i }
-
-          tape[side]['tracks'] << item
-        end
-
-        tape[side]['complete'] = params[:complete] if params[:complete]
-
-        if obj.put body: JSON.pretty_generate(tape)
-          json tape: tape
-        else
-          error 'o no'
-        end
+    get '/tapes/:tape_id' do
+      if request.accept? 'text/html'
+        erb :tape
       else
-        404
+        json tapes: @tape
+      end
+    end
+
+    put '/tapes/:tape_id/side/:side' do
+      side = "side_#{params[:side]}"
+
+      if params[:filename]
+        next_position = (tape[side]['tracks'].collect { |a| a["position"] }.max || 0) + 1
+
+        item = { position: next_position,
+                 name: params[:filename],
+                 ticks: params[:ticks].to_i }
+
+        tape[side]['tracks'] << item
+      end
+
+      tape[side]['complete'] = params[:complete] if params[:complete]
+
+      if obj.put body: JSON.pretty_generate(tape)
+        json tape: tape
+      else
+        error 'o no'
       end
     end
   end

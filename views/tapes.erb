@@ -1,0 +1,14 @@
+<html>
+  <head>
+    <title>Tapes</title>
+    <link rel="stylesheet" type="text/css" href="/style.css" />
+  </head>
+  <body>
+    <h1>Tapes</h1>
+    <ul style="text-align: left;">
+      <% @tapes.each do |tape| %>
+        <li><a href="/tapes/<%= tape %>"><%= tape%></a></li>
+      <% end %>
+    </ul>
+  </body>
+</html>
