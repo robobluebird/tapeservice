@@ -1,25 +1,17 @@
-<html>
-  <head>
-    <title><%= @tape['name'] %>></title>
-    <link rel="stylesheet" type="text/css" href="/style.css" />
-  </head>
-  <body>
-    <h1><%= @tape['name'] %></h1>
-    <p style="text-align: left;">
-      <h2>side A</h2>
-      <ul>
-        <% @tape['side_a']['tracks'].each do |track| %>
-          <li><%= track['name'] %></li>
-        <% end %>
-      </ul>
-    </p>
-    <p style="text-align: left;">
-      <h2>side B</h2>
-      <ul>
-        <% @tape['side_b']['tracks'].each do |track| %>
-          <li><%= track['name'] %></li>
-        <% end %>
-      </ul>
-    </p>
-  </body>
-</html>
+<h1><%= @tape['name'] %></h1>
+<div>
+  <h2>side A</h2>
+  <ol>
+    <% @tape['side_a']['tracks'].each do |track| %>
+      <li><%= track['name'] %> (<%= track['ticks'] %>)</li>
+    <% end %>
+  </ol>
+</div>
+<div>
+  <h2>side B</h2>
+  <ol>
+    <% @tape['side_b']['tracks'].each do |track| %>
+      <li><%= track['name'] %> (<%= track['ticks'] %>)</li>
+    <% end %>
+  </ol>
+</div>

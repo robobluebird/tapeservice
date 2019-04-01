@@ -1,14 +1,6 @@
-<html>
-    <head>
-      <title>Upload to <%= @tape %></title>
-      <link rel="stylesheet" type="text/css" href="/style.css" />
-    </head>
-    <body>
-      <h1>Send a sound to the tape named <%= @tape %></h1>
-        
-      <form action="/uploads" method="POST" enctype="multipart/form-data">
-        <input type="file" name="file">
-        <input type="submit">
-      </form>
-    </body>
-</html>
+<h1>Send a sound to the tape named <%= @tape %></h1>
+
+<form action="/uploads" method="POST" enctype="multipart/form-data">
+  <input type="file" name="file">
+  <input type="submit">
+</form>
