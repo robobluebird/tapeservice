@@ -10,7 +10,7 @@ Servo recordServo;
 
 volatile int ticks = 0;
 
-int commandThatWasReceived = 0;
+int commandThatWasReceived = -1;
 int stepIndex = -1;
 int taskIndex = -1;
 int tickLimit = -1;
@@ -372,5 +372,6 @@ void sendData() {
     sprintf(action, "");
   } else {
     Wire.write(commandThatWasReceived);
+    commandThatWasReceived = -1;
   }
 }

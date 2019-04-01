@@ -107,8 +107,14 @@ module Tape
       tape = {
         name: params[:name],
         ticks: params[:ticks],
-        side_a: [],
-        side_b: []
+        side_a: {
+          complete: false,
+          tracks: []
+        },
+        side_b: {
+          complete: false,
+          tracks: []
+        }
       }
 
       obj = bucket.object "tapes/#{params[:name]}"
@@ -120,23 +126,24 @@ module Tape
       end
     end
 
-    put '/tapes/:tape_id' do
+    put '/tapes/:tape_id/side/:side' do
       obj = bucket.object "tapes/#{params[:tape_id]}"
-
-      if params[:filename].nil? || params[:side].nil? || params[:ticks].nil?
-        halt error 'bd npt'
-      end
 
       if obj.exists?
         tape = JSON.parse obj.get.body.read
         side = "side_#{params[:side]}"
-        next_position = (tape[side].collect { |a| a["position"] }.max || 0) + 1
 
-        item = { position: next_position,
-                 name: params[:filename],
-                 ticks: params[:ticks].to_i }
+        if params[:filename]
+          next_position = (tape[side].collect { |a| a["position"] }.max || 0) + 1
 
-        tape[side] << item
+          item = { position: next_position,
+                   name: params[:filename],
+                   ticks: params[:ticks].to_i }
+
+          tape[side]['tracks'] << item
+        end
+
+        tape[side]['complete'] = params[:complete] if params[:complete]
 
         if obj.put body: JSON.pretty_generate(tape)
           json tape: tape
