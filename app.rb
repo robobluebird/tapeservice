@@ -32,6 +32,7 @@ module Tape
     end
 
     get '/tapes/:tape_id/uploads/new' do
+      tape
       erb :upload
     end
 
@@ -74,7 +75,7 @@ module Tape
                   want a duplicate) please rename the file to something unique first."
       else
         if obj.upload_file file
-          halt [200, 'ok']
+          halt erb :uploaded
         else
           @status = 500
           @error = 'there was a problem uploading the file'
@@ -138,6 +139,8 @@ module Tape
 
     get '/tapes/:tape_id' do
       if request.accept? 'text/html'
+        tape
+        @queued_count = bucket.objects(delimiter: '/', prefix: "todo/#{params[:tape_id]}/").count
         erb :tape
       else
         json tape: tape
@@ -160,7 +163,7 @@ module Tape
           tape[side]['complete'] = true
         end
       elsif params[:complete]
-        tape[side]['complete'] = params[:complete]
+        tape[side]['complete'] = params[:complete] == 'true' ? true : false
       else
         halt json tape: tape
       end

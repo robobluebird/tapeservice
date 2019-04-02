@@ -1,6 +1,6 @@
-<h1>Send a sound to the tape named <%= @tape %></h1>
+<h1>Send a sound to the tape named <%= @tape['name'] %></h1>
 
-<form action="/uploads" method="POST" enctype="multipart/form-data">
+<form action="/tapes/<%= @tape['name'] %>/uploads" method="POST" enctype="multipart/form-data">
   <input type="file" name="file">
   <input type="submit">
 </form>
