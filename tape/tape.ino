@@ -14,10 +14,12 @@ int commandThatWasReceived = -1;
 int stepIndex = -1;
 int taskIndex = -1;
 int tickLimit = -1;
+int futureTickLimit = -1;
 int mode = 0;
 
 long timeRewindBegan = -1;
 long timeOfLastTick = -1;
+long lastTickUpdate = -1;
 
 char action[20];
 
@@ -134,10 +136,16 @@ void loop() {
       stopTurning = false;
     } else if (tickLimit > 0 && ticks >= tickLimit) {
       stopAndStandby();
-      notifyTickLimit();
+      notifyTicks();
+      tickLimit = -1;
     } else if (findingTheStart && startedTurningOnClearTape && timeRewindBegan > 0 && millis() - timeRewindBegan > 3000) {
       stopAndStandby();
       timeRewindBegan = -1;
+    } else {
+      if (millis() - lastTickUpdate > 3000) {
+        notifyTicks();
+        lastTickUpdate = millis();
+      }
     }
   } else {
     if (steps[stepIndex + 1] != NULL) {
@@ -191,6 +199,11 @@ void notifyTapeLength() {
   notify();
 }
 
+void notifyTicks() {
+  sprintf(action, "ticks:%d", ticks);
+  notify();
+}
+
 void notifyOutOfSpace() {
   sprintf(action, "space");
   notify();
@@ -198,11 +211,6 @@ void notifyOutOfSpace() {
 
 void notifyDone() {
   sprintf(action, "done");
-  notify();
-}
-
-void notifyTickLimit() {
-  sprintf(action, "ticklimit");
   notify();
 }
 
@@ -235,6 +243,25 @@ void newTape() {
   tasks[1] = tapeLength;
 }
 
+void advanceToTickLimit(int limit) {
+  clearTasks();
+  
+  futureTickLimit = limit;
+  
+  tasks[0] = startOfTape;
+  tasks[1] = advance;
+}
+
+void advance() {
+  clearSteps();
+  
+  tickLimit = futureTickLimit;
+  futureTickLimit = -1;
+  
+  steps[0] = fastForwardMode;
+  steps[1] = startMotor;
+}
+
 void startOfTape() {
   clearSteps();
 
@@ -250,7 +277,7 @@ void startOfTape() {
 
 void tapeLength() {
   clearSteps();
-  
+
   checkingLength = true;
 
   steps[0] = fastForwardMode;
@@ -260,6 +287,7 @@ void tapeLength() {
 
 void startMotor() {
   digitalWrite(7, HIGH);
+  lastTickUpdate = millis();
   turning = true;
   ticks = 0;
 }
@@ -320,7 +348,7 @@ void recordMode() {
 }
 
 void receiveData(int byteCount) {
-  while (Wire.available()) {
+  if (byteCount == 1) {
     commandThatWasReceived = Wire.read();
 
     switch (commandThatWasReceived) {
@@ -362,10 +390,30 @@ void receiveData(int byteCount) {
       default:
         break;
     }
+  } else if (byteCount > 1) {
+    Wire.read(); // first byte = the "command" or "register" byte, we don't use it
+
+    char message[33];
+    int i = 0;
+    
+    while (Wire.available()) {
+      char x = Wire.read();
+      message[i] = x;
+      i++;
+    }
+
+    message[i] = '\0';
+
+    if (strstr(message, "advance") != NULL) {
+      char *s = strchr(message, ':');
+      s++;
+      advanceToTickLimit(atoi(s));   
+    }
+    
+    commandThatWasReceived = 27;
   }
 }
 
-// callback for sending data
 void sendData() {
   if (strcmp(action, "") != 0) {
     Wire.write(action);
