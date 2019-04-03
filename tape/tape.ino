@@ -24,6 +24,7 @@ long lastTickUpdate = -1;
 char action[20];
 
 bool findingTheStart = false;
+bool advancing = false;
 bool startedTurningOnClearTape = false;
 bool turning = false;
 bool stopTurning = false;
@@ -138,13 +139,21 @@ void loop() {
       stopAndStandby();
       notifyTicks();
       tickLimit = -1;
+      advancing = false;
     } else if (findingTheStart && startedTurningOnClearTape && timeRewindBegan > 0 && millis() - timeRewindBegan > 3000) {
       stopAndStandby();
       timeRewindBegan = -1;
     } else {
-      if (millis() - lastTickUpdate > 3000) {
-        notifyTicks();
-        lastTickUpdate = millis();
+      if (!findingTheStart && !advancing) {
+        if (millis() - lastTickUpdate > 2000) {
+          if (mode == 3 || mode == 5) {
+            notifyTicks();
+          } else if (mode == 4) {
+            notifyNegativeTicks();
+          }
+
+          lastTickUpdate = millis();
+        }
       }
     }
   } else {
@@ -204,6 +213,11 @@ void notifyTicks() {
   notify();
 }
 
+void notifyNegativeTicks() {
+  sprintf(action, "ticks:-%d", ticks);
+  notify();
+}
+
 void notifyOutOfSpace() {
   sprintf(action, "space");
   notify();
@@ -245,19 +259,20 @@ void newTape() {
 
 void advanceToTickLimit(int limit) {
   clearTasks();
-  
+
   futureTickLimit = limit;
-  
+  advancing = true;
+
   tasks[0] = startOfTape;
   tasks[1] = advance;
 }
 
 void advance() {
   clearSteps();
-  
+
   tickLimit = futureTickLimit;
   futureTickLimit = -1;
-  
+
   steps[0] = fastForwardMode;
   steps[1] = startMotor;
 }
@@ -395,7 +410,7 @@ void receiveData(int byteCount) {
 
     char message[33];
     int i = 0;
-    
+
     while (Wire.available()) {
       char x = Wire.read();
       message[i] = x;
@@ -407,9 +422,9 @@ void receiveData(int byteCount) {
     if (strstr(message, "advance") != NULL) {
       char *s = strchr(message, ':');
       s++;
-      advanceToTickLimit(atoi(s));   
+      advanceToTickLimit(atoi(s));
     }
-    
+
     commandThatWasReceived = 27;
   }
 }
