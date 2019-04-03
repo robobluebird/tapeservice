@@ -134,7 +134,7 @@ void loop() {
     } else if (stopTurning) {
       stopAndStandby();
       stopTurning = false;
-    } else if (tickLimit > 0 && ticks >= tickLimit) {
+    } else if (tickLimit > -1 && ticks >= tickLimit) {
       stopAndStandby();
       notifyTicks();
       tickLimit = -1;
