@@ -89,9 +89,13 @@ module Tape
       obj = bucket.object "todo/#{params[:tape_id]}/#{params[:filename]}"
 
       if obj.exists?
-        obj.move_to "itmstore/done/#{params[:tape_id]}/#{params[:filename]}"
+        new_obj = obj.move_to "itmstore/done/#{params[:tape_id]}/#{params[:filename]}"
 
-        [200, 'ok']
+        if new_obj.exists? && !obj.exists?
+          [200, 'ok']
+        else
+          error 'mv fld'
+        end
       else
         error 'obj ddn exs'
       end
