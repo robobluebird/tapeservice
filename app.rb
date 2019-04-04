@@ -23,8 +23,41 @@ module Tape
       @tape ||= JSON.parse(obj.get.body.read) if obj
     end
 
+    def queued
+      if tape
+        bucket.objects(delimiter: '/', prefix: "todo/#{tape['name']}/").count
+      end
+    end
+
+    helpers do
+      def side_a_status
+        if tape['side_a']['complete']
+          " (complete)"
+        else
+          " (#{queued} queued)"
+        end
+      end
+
+      def side_b_status
+        if tape['side_a']['complete']
+          if tape['side_b']['complete']
+            " (complete)"
+          else
+            " (#{queued} queued)"
+          end
+        else
+          ""
+        end
+      end
+    end
+
     before '/tapes/:tape_id*' do
-      halt 404, 'tape not found!' if tape.nil?
+      @status = 404
+      @error = 'tape not found!'
+
+      if tape.nil?
+        halt erb :error
+      end
     end
 
     get '/' do
@@ -144,7 +177,6 @@ module Tape
     get '/tapes/:tape_id' do
       if request.accept? 'text/html'
         tape
-        @queued_count = bucket.objects(delimiter: '/', prefix: "todo/#{params[:tape_id]}/").count
         erb :tape
       else
         json tape: tape

@@ -1,7 +1,7 @@
 <h1><%= @tape['name'] %></h1>
 <h2><a href="/tapes/<%= @tape['name'] %>/uploads/new">upload</a>
 <div>
-  <h2>side A <%= if @tape['side_a']['complete'] then "(complete)" else "(#{@queued_count} queued)" end %></h2>
+  <h2>side A<%= side_a_status %></h2>
   <ol>
     <% @tape['side_a']['tracks'].each do |track| %>
       <li><%= track['name'] %> (<%= track['ticks'] %>)</li>
@@ -9,7 +9,7 @@
   </ol>
 </div>
 <div>
-  <h2>side B <%= if @tape['side_b']['complete'] then "(complete)" else "(#{@queued_count} queued)" end %></h2>
+  <h2>side B<%= side_b_status %></h2>
   <ol>
     <% @tape['side_b']['tracks'].each do |track| %>
       <li><%= track['name'] %> (<%= track['ticks'] %>)</li>
