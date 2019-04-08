@@ -52,11 +52,14 @@ module Tape
     end
 
     before '/tapes/:tape_id*' do
-      @status = 404
-      @error = 'tape not found!'
-
       if tape.nil?
-        halt erb :error
+        if request.accept? 'text/html'
+          @status = 404
+          @error = 'tape not found!'
+          halt erb :error
+        else
+          halt 404
+        end
       end
     end
 
