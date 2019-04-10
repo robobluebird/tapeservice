@@ -102,7 +102,7 @@ module Tape
       filename = params[:file][:filename]
       file = params[:file][:tempfile]
 
-      obj = bucket.object "todo/#{params[:tape_id]}/#{filename}"
+      obj = bucket.object "todo/#{tape['name']}/#{filename}"
 
       if obj.exists?
         @status = 400
@@ -198,11 +198,11 @@ module Tape
 
         tape[side]['tracks'] << item
 
-        if tape[side]['tracks'].reduce(0) { |mem, obj| mem += obj['ticks'].to_i } >= tape['ticks'].to_i / 2
+        if tape[side]['tracks'].reduce(0) { |mem, obj| mem += obj['ticks'].to_i } >= tape['ticks'].to_i
           tape[side]['complete'] = true
         end
       elsif params[:complete]
-        tape[side]['complete'] = params[:complete] == 'true' ? true : false
+        tape[side]['complete'] = param[:complete]
       else
         halt json tape: tape
       end
