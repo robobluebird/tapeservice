@@ -357,7 +357,7 @@ void recordMode() {
   playServo.write(140);
   eraseServo.write(145);
   reverseServo.write(90);
-  recordServo.write(70);
+  recordServo.write(60);
   mode = 5;
   delay(1000);
 }
