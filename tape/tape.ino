@@ -90,18 +90,18 @@ void transition() {
   }
 }
 
+// standby = 0, ff = 1, play = 2, play2 = 3, reverse = 4, record = 5
 void loop() {
   if (turning) {
     if (check > -1) {
       if (digitalRead(2) == check) {
         checkCount++;
 
-        if (checkCount >= 1800) {
+        if (checkCount >= 2000) {
           if (check == 0) {
             if (mode == 1 || mode == 2 || mode == 3 || mode == 5) {
               endOfTape = true;
             } else {
-              delay(500);
               stopTurning = true;
             }
           } else {
@@ -145,7 +145,7 @@ void loop() {
       timeRewindBegan = -1;
     } else {
       if (!findingTheStart && !advancing) {
-        if (millis() - lastTickUpdate > 2000) {
+        if (millis() - lastTickUpdate > 5000) {
           if (mode == 3 || mode == 5) {
             notifyTicks();
           } else if (mode == 4) {
@@ -199,7 +199,7 @@ void notifyStartOfTape() {
 }
 
 void notifyEndOfTape() {
-  sprintf(action, "end");
+  sprintf(action, "finished");
   notify();
 }
 
@@ -215,16 +215,6 @@ void notifyTicks() {
 
 void notifyNegativeTicks() {
   sprintf(action, "ticks:-%d", ticks);
-  notify();
-}
-
-void notifyOutOfSpace() {
-  sprintf(action, "space");
-  notify();
-}
-
-void notifyDone() {
-  sprintf(action, "done");
   notify();
 }
 
@@ -302,6 +292,11 @@ void tapeLength() {
 
 void startMotor() {
   digitalWrite(7, HIGH);
+  
+  if (mode == 4) {
+    timeRewindBegan = millis();
+  }
+  
   lastTickUpdate = millis();
   turning = true;
   ticks = 0;

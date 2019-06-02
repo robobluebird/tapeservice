@@ -202,7 +202,7 @@ module Tape
           tape[side]['complete'] = true
         end
       elsif params[:complete]
-        tape[side]['complete'] = param[:complete]
+        tape[side]['complete'] = params[:complete]
       else
         halt json tape: tape
       end
