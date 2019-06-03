@@ -197,14 +197,14 @@ module Tape
                  ticks: params[:ticks].to_i }
 
         tape[side]['tracks'] << item
+      end
 
-        if tape[side]['tracks'].reduce(0) { |mem, obj| mem += obj['ticks'].to_i } >= tape['ticks'].to_i
-          tape[side]['complete'] = true
-        end
-      elsif params[:complete]
+      total_ticks = tape[side]['tracks'].reduce(0) { |mem, obj| mem += obj['ticks'].to_i }
+
+      if params[:complete]
         tape[side]['complete'] = params[:complete]
-      else
-        halt json tape: tape
+      elsif total_ticks >= tape['ticks'].to_i
+        tape[side]['complete'] = true
       end
 
       if obj.put body: JSON.pretty_generate(tape)
