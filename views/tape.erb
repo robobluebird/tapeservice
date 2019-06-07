@@ -1,7 +1,13 @@
 <h1><%= @tape['name'] %></h1>
-<h2><a href="/tapes/<%= @tape['name'] %>/uploads/new">upload</a></h2>
 <div>
-  <h2>side A<%= side_a_status %></h2>
+  <a href="/tapes/<%= @tape['name'] %>/uploads/new">upload</a>
+</div>
+<div>
+  <a href="/tapes">back</a>
+</div>
+<div>
+  <h2 class="side">side A</h2>
+  <div class="side_status"><%= side_a_status %></div>
   <ol>
     <% @tape['side_a']['tracks'].each do |track| %>
       <li><%= track['name'] %> (<%= track['ticks'] %>)</li>
@@ -9,7 +15,8 @@
   </ol>
 </div>
 <div>
-  <h2>side B<%= side_b_status %></h2>
+  <h2 class="side">side B</h2>
+  <div class="side_status"><%= side_b_status %></div>
   <ol>
     <% @tape['side_b']['tracks'].each do |track| %>
       <li><%= track['name'] %> (<%= track['ticks'] %>)</li>

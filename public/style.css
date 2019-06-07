@@ -1,9 +1,21 @@
 body {
   font-size: 2em;
   font-family: sans-serif;
-  text-align: center;
 }
 
-div, ul {
+div, ul, ol {
   text-align: left;
+  margin: 0;
+}
+
+.side {
+  display: inline-block;
+}
+
+.side_status {
+  display: inline-block;
+}
+
+.bumped {
+  margin-top: 20px;
 }

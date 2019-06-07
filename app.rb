@@ -1,6 +1,6 @@
 require 'sinatra/base'
 require 'sinatra/json'
-require 'aws-sdk'
+require 'aws-sdk-s3'
 
 module Tape
   class App < Sinatra::Base
@@ -34,7 +34,11 @@ module Tape
         if tape['side_a']['complete']
           " (complete)"
         else
-          " (#{queued} queued)"
+          if queued > 0
+            " (<a href='/tapes/#{tape["name"]}/uploads'>#{queued} queued</a>)"
+          else
+            " (0 queued)"
+          end
         end
       end
 
@@ -43,7 +47,11 @@ module Tape
           if tape['side_b']['complete']
             " (complete)"
           else
-            " (#{queued} queued)"
+            if queued > 0
+              " (<a href='/tapes/#{tape["name"]}/uploads'>#{queued} queued</a>)"
+            else
+              " (0 queued)"
+            end
           end
         else
           ""
@@ -73,12 +81,17 @@ module Tape
     end
 
     get '/tapes/:tape_id/uploads' do
-      uploads = bucket.objects(delimiter: '/', prefix: "todo/#{params[:tape_id]}/").map do |obj|
+      @uploads = bucket.objects(delimiter: '/', prefix: "todo/#{params[:tape_id]}/").map do |obj|
         parts = obj.key.split('/')
         parts.last if parts.count > 1
       end.compact
 
-      json uploads: uploads
+      if request.accept? "text/html"
+        tape
+        erb :uploads
+      else
+        json uploads: uploads
+      end
     end
 
     get '/tapes/:tape_id/uploads/:filename' do

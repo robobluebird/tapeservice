@@ -1,6 +1,10 @@
 <h1>Send a sound to the tape named <%= @tape['name'] %></h1>
-
-<form action="/tapes/<%= @tape['name'] %>/uploads" method="POST" enctype="multipart/form-data">
-  <input type="file" name="file">
-  <input type="submit">
-</form>
+<div class="centered">
+  <a href="/tapes/<%= @tape["name"] %>">back</a>
+</div>
+<div class="centered bumped">
+  <form action="/tapes/<%= @tape['name'] %>/uploads" method="POST" enctype="multipart/form-data">
+    <input type="file" name="file">
+    <input type="submit">
+  </form>
+</div>
