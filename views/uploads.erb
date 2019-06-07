@@ -1,9 +1,11 @@
 <h1>uploads queued for <b><%= @tape["name"] %></b></h1>
 <a href="/tapes/<%= @tape["name"] %>">back</a>
-<ol>
-  <% @uploads.each do |upload| %>
-    <li>
-      <%= upload %>
-    </li>
-  <% end %>
-</ol>
+<div class="bumped">
+  <ol>
+    <% @uploads.each do |upload| %>
+      <li>
+        <%= upload %>
+      </li>
+    <% end %>
+  </ol>
+</div>
