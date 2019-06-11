@@ -164,6 +164,8 @@ module Tape
     end
 
     post '/tapes' do
+      halt json: { error: "taken" } if tape
+
       tape = {
         name: params[:name],
         ticks: params[:ticks],
@@ -183,6 +185,51 @@ module Tape
         json tape: tape
       else
         error 'o no'
+      end
+    end
+
+    get "/commands" do
+      if params[:password] && params[:password] == ENV["COMMAND_PASSWORD"]
+        params[:tape_id] = "commands"
+        json commands: tape
+      end
+    end
+
+    post "/next_command" do
+      if params[:password] && params[:password] == ENV["COMMAND_PASSWORD"]
+        params[:tape_id] = "commands"
+
+        command = tape["side_a"]["tracks"].shift || "none"
+
+        tape["side_a"]["tracks"].each do |item|
+          item["position"] = item["position"].to_i - 1
+        end
+
+        if obj.put body: JSON.pretty_generate(tape)
+          json command: command
+        else
+          error 'o no'
+        end
+      else
+        500
+      end
+    end
+
+    post "/commands" do
+      if params[:password] == ENV["command_password"]
+        next_position = (tape[side]['tracks'].collect { |a| a["position"] }.max || 0) + 1
+
+        item = { position: next_position,
+                 name: params[:command],
+                 ticks: 0 }
+
+        tape[side]['tracks'] << item
+
+        if obj.put body: JSON.pretty_generate(tape)
+          json tape: tape
+        else
+          error 'o no'
+        end
       end
     end
 
