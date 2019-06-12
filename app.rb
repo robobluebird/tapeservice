@@ -156,6 +156,8 @@ module Tape
         parts.last if parts.count > 1
       end.compact
 
+      @tapes.delete "commands"
+
       if request.accept? 'text/html'
         erb :tapes
       else
@@ -195,7 +197,11 @@ module Tape
       end
     end
 
-    post "/next_command" do
+    get "/commands/new" do
+      erb :command
+    end
+
+    post "/commands/consume" do
       if params[:password] && params[:password] == ENV["COMMAND_PASSWORD"]
         params[:tape_id] = "commands"
 
@@ -206,7 +212,7 @@ module Tape
         end
 
         if obj.put body: JSON.pretty_generate(tape)
-          json command: command
+          json command: command["name"]
         else
           error 'o no'
         end
@@ -217,6 +223,9 @@ module Tape
 
     post "/commands" do
       if params[:password] == ENV["command_password"]
+        side = "side_a"
+        params[:tape_id] = "commands"
+
         next_position = (tape[side]['tracks'].collect { |a| a["position"] }.max || 0) + 1
 
         item = { position: next_position,
