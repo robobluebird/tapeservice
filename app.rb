@@ -5,6 +5,14 @@ require "aws-sdk-s3"
 
 module Tape
   class App < Sinatra::Base
+    def truthy? val
+      [1, true, "true", "True"].include? val
+    end
+
+    def falsey? val
+      [0, false, "false", "False", nil].include? val
+    end
+
     def bucket
       @bucket ||= Aws::S3::Resource.new(region: 'us-east-2').bucket('itmstore')
     end
@@ -49,7 +57,7 @@ module Tape
 
     helpers do
       def side_a_status
-        if tape['side_a']['complete']
+        if truthy? tape['side_a']['complete']
           " (complete)"
         else
           if queued > 0
@@ -61,8 +69,8 @@ module Tape
       end
 
       def side_b_status
-        if tape['side_a']['complete']
-          if tape['side_b']['complete']
+        if truthy? tape['side_a']['complete']
+          if truthy? tape['side_b']['complete']
             " (complete)"
           else
             if queued > 0
@@ -130,6 +138,7 @@ module Tape
     end
 
     post '/tapes/:tape_id/uploads' do
+      @path = request.path
       filename = params[:file][:filename]
       file = params[:file][:tempfile]
 
@@ -299,7 +308,8 @@ module Tape
       total_ticks = tape[side]['tracks'].reduce(0) { |mem, obj| mem += obj['ticks'].to_i }
 
       if params[:complete]
-        tape[side]['complete'] = params[:complete]
+        truthiness = truthy? params[:complete]
+        tape[side]['complete'] = truthiness
       elsif total_ticks >= tape['ticks'].to_i
         tape[side]['complete'] = true
       end

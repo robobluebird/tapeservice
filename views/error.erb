@@ -1,2 +1,8 @@
 <h1><%= @status %> error</h1>
 <p><%= @error %></p>
+
+<% if @path %>
+  <a href="<%= @path %>">back</a>
+<% else %>
+  <a href="/">home</a>
+<% end %>
