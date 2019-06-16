@@ -205,7 +205,7 @@ module Tape
       if params[:password] && params[:password] == ENV["COMMAND_PASSWORD"]
         params[:tape_id] = "commands"
 
-        command = tape["side_a"]["tracks"].shift || "nothing"
+        command = tape["side_a"]["tracks"].shift || { "name" => "none" }
 
         tape["side_a"]["tracks"].each do |item|
           item["position"] = item["position"].to_i - 1
