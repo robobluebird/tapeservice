@@ -1,11 +1,29 @@
-require 'sinatra/base'
-require 'sinatra/json'
-require 'aws-sdk-s3'
+require "cocaine"
+require "sinatra/base"
+require "sinatra/json"
+require "aws-sdk-s3"
 
 module Tape
   class App < Sinatra::Base
     def bucket
       @bucket ||= Aws::S3::Resource.new(region: 'us-east-2').bucket('itmstore')
+    end
+
+    def sound_duration sound
+      cmd = Cocaine::CommandLine.new('sox', ":in -n stat 2>&1 | grep 'Length (seconds)'")
+      match = /(\d+\.\d+)/.match cmd.run in: sound.path
+      match.captures.first.to_f.round 4
+    rescue
+      0
+    end
+
+    def convert_sound_format_to_mp3 sound
+      tempfile = Tempfile.new ['', '.mp3']
+
+      Cocaine::CommandLine.new('ffmpeg', '-i :in -acodec libmp3lame -y -b:a 96k -ar 44100 -ac 1 :out')
+        .run(in: sound.path, out: tempfile.path)
+
+      tempfile
     end
 
     def error reason
@@ -123,7 +141,17 @@ module Tape
                   is it possible this is a duplicate? If not (or you \
                   want a duplicate) please rename the file to something unique first."
       else
-        if obj.upload_file file
+        duration = sound_duration file
+
+        if duration > 300
+          @status = 500
+          @error = 'file runtime is too long. less than 5 minutes please.'
+          halt erb :error
+        end
+
+        morphed = convert_sound_format_to_mp3 file
+
+        if obj.upload_file morphed
           halt erb :uploaded
         else
           @status = 500
