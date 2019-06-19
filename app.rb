@@ -139,7 +139,8 @@ module Tape
 
     post '/tapes/:tape_id/uploads' do
       @path = request.path
-      filename = params[:file][:filename]
+
+      filename = params[:blob_filename] || params[:file][:filename]
       file = params[:file][:tempfile]
 
       obj = bucket.object "todo/#{tape['name']}/#{filename}"
