@@ -116,7 +116,7 @@ module Tape
         tape
         erb :uploads
       else
-        json uploads: uploads
+        json uploads: @uploads
       end
     end
 
