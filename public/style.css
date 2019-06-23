@@ -8,6 +8,21 @@ div, ul, ol {
   margin: 0;
 }
 
+input {
+  font-size: 1em;
+  margin-bottom: 50px;
+}
+
+input[type="file"] {
+  padding-top: 42px;
+}
+
+.error {
+  font-weight: bold;
+  border: 1px solid red;
+  color: red;
+}
+
 .side {
   display: inline-block;
 }

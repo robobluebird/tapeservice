@@ -2,16 +2,24 @@
 <div class="centered bumped">
   upload a track
 </div>
+<% if @error %>
+  <div class="error">
+    <%= @error %>
+  </div>
+<% end %>
 <div class="centered bumped">
   <form action="/tapes/<%= @tape['name'] %>/uploads" method="POST" enctype="multipart/form-data">
     <input type="file" name="file">
+    <br />
+    <input type="text" name="person" placeholder="who are you?" />
+    <br />
     <input type="submit">
   </form>
 </div>
-<div class="centered bumped">
+<div style="display: none;" class="centered bumped">
   or record a message
 </div>
-<div class="centered bumped">
+<div style="display: none;" class="centered bumped">
   <section class="main-controls">
     <div id="buttons">
       <button class="record">Record</button>
@@ -27,6 +35,7 @@
   or go
   <a href="/tapes/<%= @tape["name"] %>">back</a>
 </div>
+<!--
 <script>
   let record = document.querySelector('.record');
   let stop = document.querySelector('.stop');
@@ -118,4 +127,5 @@
   } else {
     console.log('getUserMedia not supported on your browser!');
   }
-</script>
+</script> -->
+

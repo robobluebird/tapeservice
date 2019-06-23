@@ -138,25 +138,32 @@ module Tape
     end
 
     post '/tapes/:tape_id/uploads' do
+      if params[:file].nil? || params[:person].nil?
+        @error = "choose a file and identify yourself. you forgot something."
+        halt erb :upload
+      end
+
       @path = request.path
 
       filename = params[:blob_filename] || params[:file][:filename]
       file = params[:file][:tempfile]
 
-      obj = bucket.object "todo/#{tape['name']}/#{filename}"
+      duration = sound_duration file
+      trimmed_filename = filename.gsub("-", "_").strip
+      person = params[:person].gsub("-", "_").strip
+      full_filename = "#{trimmed_filename}-#{person}-#{duration}"
+
+      obj = bucket.object "todo/#{tape['name']}/#{full_filename}"
 
       if obj.exists?
-        @status = 400
         @error = "there is a file already queued with this name, \
                   is it possible this is a duplicate? If not (or you \
                   want a duplicate) please rename the file to something unique first."
+        halt erb :upload
       else
-        duration = sound_duration file
-
         if duration > 300
-          @status = 500
           @error = 'file runtime is too long. less than 5 minutes please.'
-          halt erb :error
+          halt erb :upload
         end
 
         morphed = convert_sound_format_to_mp3 file
@@ -166,10 +173,9 @@ module Tape
         else
           @status = 500
           @error = 'there was a problem uploading the file'
+          erb :upload
         end
       end
-
-      erb :error
     end
 
     post '/tapes/:tape_id/uploads/:filename/ok' do
