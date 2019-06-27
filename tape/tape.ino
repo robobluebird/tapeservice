@@ -40,6 +40,7 @@ void (*tasks[10])(void);
 
 void setup() {
   clearSteps();
+  clearTasks();
 
   Serial.begin(9600);
 
@@ -100,15 +101,21 @@ void loop() {
         if (checkCount >= 2000) {
           if (check == 0) {
             if (mode == 1 || mode == 2 || mode == 3 || mode == 5) {
+              Serial.print("mode 1 2 3 5 check 0 hit, endOfTape = true. ");
+              Serial.print("mode: ");
+              Serial.println(mode);
               endOfTape = true;
             } else {
+              Serial.println("mode 4 6 hit check 0, stopTurning = true");
               stopTurning = true;
             }
           } else {
             if (findingTheStart) {
               if (mode == 3) {
+                Serial.println("check is 1, findingTheStart is true and mode 3 so stopTurning = true");
                 stopTurning = true;
               } else if (mode == 4) {
+                Serial.println("check is 1, findingTheStart is true and mode is 4 so timeRewindBegan = -1");
                 timeRewindBegan = -1;
               }
             }
@@ -124,28 +131,38 @@ void loop() {
     }
 
     if (endOfTape) {
+      Serial.println("endOfTape is true so stop and standby");
       stopAndStandby();
       endOfTape = false;
 
       if (checkingLength) {
+        Serial.println("checkingLength is true so don't notify");
         checkingLength = false;
       } else {
+        Serial.println("notify end of tape because not checkingLength");
         notifyEndOfTape();
       }
     } else if (stopTurning) {
+      Serial.println("stopTurning is true so stop and standby");
       stopAndStandby();
       stopTurning = false;
     } else if (tickLimit > -1 && ticks >= tickLimit) {
+      Serial.print("tickLimit ");
+      Serial.print(tickLimit);
+      Serial.println(" reached so stop");
       stopAndStandby();
       notifyTicks();
       tickLimit = -1;
       advancing = false;
-    } else if (findingTheStart && startedTurningOnClearTape && timeRewindBegan > 0 && millis() - timeRewindBegan > 3000) {
+    } else if (mode == 4 && findingTheStart && startedTurningOnClearTape && timeRewindBegan > 0 && millis() - timeRewindBegan > 3000) {
+      Serial.println("findingTheStart AND startedOnClearTape AND timeRewindBegan > 0 AND it's been over 3 seconds");
       stopAndStandby();
       timeRewindBegan = -1;
     } else {
       if (!findingTheStart && !advancing) {
         if (millis() - lastTickUpdate > 5000) {
+          Serial.println("sending tick update");
+          
           if (mode == 3 || mode == 5) {
             notifyTicks();
           } else if (mode == 4) {
@@ -158,13 +175,21 @@ void loop() {
     }
   } else {
     if (steps[stepIndex + 1] != NULL) {
+      Serial.print("stepIndex: ");
+      Serial.println(stepIndex);
+      Serial.print("step 0 null?: ");
+      Serial.println(steps[0] == NULL);
+      
       stepIndex++;
 
       if (steps[stepIndex] == startMotor) {
         if (digitalRead(2) == 0) {
+          Serial.println("starting on clear tape");
+          
           startedTurningOnClearTape = true;
 
           if (findingTheStart && steps[stepIndex - 1] == reverseMode) {
+            Serial.println("reseting timeRewindBegan");
             timeRewindBegan = 0;
           }
         } else {
@@ -174,14 +199,11 @@ void loop() {
 
       steps[stepIndex]();
     } else {
-      clearSteps();
-
       if (tasks[taskIndex + 1] != NULL) {
+        Serial.println("there is still a task to do");
         taskIndex++;
 
         tasks[taskIndex]();
-      } else {
-        clearTasks();
       }
     }
   }
@@ -225,6 +247,8 @@ void notify() {
 }
 
 void clearSteps() {
+  Serial.println("clearing steps");
+  
   for (int i = 0; i < 10; i++) {
     steps[i] = NULL;
   }
@@ -233,6 +257,8 @@ void clearSteps() {
 }
 
 void clearTasks() {
+  Serial.println("clearing tasks");
+  
   for (int i = 0; i < 10; i++) {
     tasks[i] = NULL;
   }
@@ -241,13 +267,19 @@ void clearTasks() {
 }
 
 void newTape() {
+  Serial.println("new tape...");
+  
   clearTasks();
 
   tasks[0] = startOfTape;
   tasks[1] = tapeLength;
+  tasks[2] = clearTasks;
 }
 
 void advanceToTickLimit(int limit) {
+  Serial.print("advancing to tick limit ");
+  Serial.println(limit);
+  
   clearTasks();
 
   futureTickLimit = limit;
@@ -255,9 +287,12 @@ void advanceToTickLimit(int limit) {
 
   tasks[0] = startOfTape;
   tasks[1] = advance;
+  tasks[2] = clearTasks;
 }
 
 void advance() {
+  Serial.println("advancing task starting");
+  
   clearSteps();
 
   tickLimit = futureTickLimit;
@@ -265,9 +300,12 @@ void advance() {
 
   steps[0] = fastForwardMode;
   steps[1] = startMotor;
+  steps[2] = clearSteps;
 }
 
 void startOfTape() {
+  Serial.println("you ask me to find the start");
+  
   clearSteps();
 
   findingTheStart = true;
@@ -278,9 +316,12 @@ void startOfTape() {
   steps[3] = playMode2;
   steps[4] = startMotor;
   steps[5] = notifyStartOfTape;
+  steps[6] = clearSteps;
 }
 
 void tapeLength() {
+  Serial.println("tape length...");
+  
   clearSteps();
 
   checkingLength = true;
@@ -288,9 +329,12 @@ void tapeLength() {
   steps[0] = fastForwardMode;
   steps[1] = startMotor;
   steps[2] = notifyTapeLength;
+  steps[3] = clearSteps;
 }
 
 void startMotor() {
+  Serial.println("starting motor");
+  
   digitalWrite(7, HIGH);
   
   if (mode == 4) {
@@ -303,16 +347,22 @@ void startMotor() {
 }
 
 void stopMotor() {
+  Serial.println("stopping motor");
+  
   digitalWrite(7, LOW);
   turning = false;
 }
 
 void standbyMode() {
+  Serial.println("standby mode");
+  
   fastForwardMode();
   mode = 0;
 }
 
 void fastForwardMode() {
+  Serial.println("fast foward mode");
+  
   playServo.write(60);
   eraseServo.write(60);
   reverseServo.write(90);
@@ -322,6 +372,8 @@ void fastForwardMode() {
 }
 
 void playMode() {
+  Serial.println("play mode 1");
+  
   playServo.write(165);
   eraseServo.write(60);
   reverseServo.write(90);
@@ -331,6 +383,8 @@ void playMode() {
 }
 
 void playMode2() {
+  Serial.println("play mode 2");
+  
   playServo.write(140);
   eraseServo.write(60);
   reverseServo.write(90);
@@ -340,6 +394,8 @@ void playMode2() {
 }
 
 void reverseMode() {
+  Serial.println("reverse mode");
+  
   playServo.write(60);
   eraseServo.write(60);
   reverseServo.write(20);
@@ -349,6 +405,8 @@ void reverseMode() {
 }
 
 void recordMode() {
+  Serial.println("record mode");
+  
   playServo.write(140);
   eraseServo.write(145);
   reverseServo.write(90);
@@ -360,6 +418,9 @@ void recordMode() {
 void receiveData(int byteCount) {
   if (byteCount == 1) {
     commandThatWasReceived = Wire.read();
+
+    Serial.print("command received: ");
+    Serial.println(commandThatWasReceived);
 
     switch (commandThatWasReceived) {
       case 1:
@@ -413,6 +474,9 @@ void receiveData(int byteCount) {
     }
 
     message[i] = '\0';
+
+    Serial.print("message received: ");
+    Serial.println(message);
 
     if (strstr(message, "advance") != NULL) {
       char *s = strchr(message, ':');
