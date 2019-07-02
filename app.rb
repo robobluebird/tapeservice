@@ -149,8 +149,8 @@ module Tape
       file = params[:file][:tempfile]
 
       duration = sound_duration file
-      trimmed_filename = filename.gsub("-", "_").strip
-      person = params[:person].gsub("-", "_").strip
+      trimmed_filename = filename.gsub("-", "\-").strip
+      person = params[:person].gsub("-", "\-").strip
       full_filename = "#{trimmed_filename}-#{person}-#{duration}"
 
       obj = bucket.object "todo/#{tape['name']}/#{full_filename}"
