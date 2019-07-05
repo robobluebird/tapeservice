@@ -1,3 +1,4 @@
+require "cgi"
 require "cocaine"
 require "sinatra/base"
 require "sinatra/json"
@@ -121,7 +122,9 @@ module Tape
     end
 
     get '/tapes/:tape_id/uploads/:filename' do
-      obj = bucket.object "todo/#{params[:tape_id]}/#{params[:filename]}"
+      filename = CGI.unescape params[:filename]
+
+      obj = bucket.object "todo/#{params[:tape_id]}/#{filename}"
 
       if obj.exists?
         file = Tempfile.new
@@ -130,7 +133,7 @@ module Tape
 
         send_file file.path,
           disposition: 'attachment',
-          filename: params[:filename],
+          filename: filename,
           type: 'application/octet-stream'
       else
         404
@@ -179,10 +182,12 @@ module Tape
     end
 
     post '/tapes/:tape_id/uploads/:filename/ok' do
-      obj = bucket.object "todo/#{params[:tape_id]}/#{params[:filename]}"
+      filename = CGI.unescape params[:filename]
+
+      obj = bucket.object "todo/#{params[:tape_id]}/#{filename}"
 
       if obj.exists?
-        new_obj = obj.move_to "itmstore/done/#{params[:tape_id]}/#{params[:filename]}"
+        new_obj = obj.move_to "itmstore/done/#{params[:tape_id]}/#{filename}"
 
         if new_obj.exists? && !obj.exists?
           [200, 'ok']
