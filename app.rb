@@ -124,6 +124,8 @@ module Tape
     get '/tapes/:tape_id/uploads/:filename' do
       filename = CGI.unescape params[:filename]
 
+      puts filename
+
       obj = bucket.object "todo/#{params[:tape_id]}/#{filename}"
 
       if obj.exists?
@@ -152,8 +154,8 @@ module Tape
       file = params[:file][:tempfile]
 
       duration = sound_duration file
-      trimmed_filename = filename.gsub("-", "\\-").strip
-      person = params[:person].gsub("-", "\\-").strip
+      trimmed_filename = filename.gsub("-", "|-").strip
+      person = params[:person].gsub("-", "|-").strip
       full_filename = "#{trimmed_filename}-#{person}-#{duration}"
 
       obj = bucket.object "todo/#{tape['name']}/#{full_filename}"
