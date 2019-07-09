@@ -112,7 +112,6 @@ module Tape
         parts = obj.key.split('/')
         parts.last if parts.count > 1
       end.compact
-         .map { |name| name.split(/(?<!\|)-/).first.gsub("|-", "-") }
 
       if request.accept? "text/html"
         tape

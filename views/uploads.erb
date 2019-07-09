@@ -4,7 +4,7 @@
   <ol>
     <% @uploads.each do |upload| %>
       <li>
-        <%= upload %>
+        <%= upload.split(/(?<!\|)-/).first.gsub("|-", "-") %>
       </li>
     <% end %>
   </ol>
