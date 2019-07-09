@@ -10,7 +10,7 @@
   <div class="side_status"><%= side_a_status %></div>
   <ol>
     <% @tape['side_a']['tracks'].each do |track| %>
-      <li><%= track['name'] %> (<%= track['ticks'] %>)</li>
+      <li><%= track["nice_name"] %> (<%= track['ticks'] %>)</li>
     <% end %>
   </ol>
 </div>
@@ -19,7 +19,7 @@
   <div class="side_status"><%= side_b_status %></div>
   <ol>
     <% @tape['side_b']['tracks'].each do |track| %>
-      <li><%= track['name'] %> (<%= track['ticks'] %>)</li>
+      <li><%= track["nice_name"] %> (<%= track['ticks'] %>)</li>
     <% end %>
   </ol>
 </div>

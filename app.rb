@@ -143,6 +143,11 @@ module Tape
     end
 
     post '/tapes/:tape_id/uploads' do
+      if params[:password] != ENV["UPLOAD_PASSWORD"]
+        @error = 'bad password.'
+        halt erb :upload
+      end
+
       if params[:file].nil? || params[:person].nil?
         @error = "choose a file and identify yourself. you forgot something."
         halt erb :upload
@@ -314,6 +319,7 @@ module Tape
 
         item = { position: next_position,
                  name: params[:filename],
+                 nice_name: params[:filename].split("-").first.gsub("|-", "-"),
                  ticks: params[:ticks].to_i }
 
         tape[side]['tracks'] << item
