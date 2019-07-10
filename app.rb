@@ -222,8 +222,6 @@ module Tape
     end
 
     post '/tapes' do
-      halt json: { error: "taken" } if tape
-
       tape = {
         name: params[:name],
         ticks: params[:ticks],
