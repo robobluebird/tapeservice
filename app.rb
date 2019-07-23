@@ -160,6 +160,7 @@ module Tape
 
       duration = sound_duration file
       trimmed_filename = filename.gsub("-", "|-").strip
+      trimmed_filename = "#{trimmed_filename}.mp3" unless trimmed_filename.end_with? ".mp3"
       person = params[:person].gsub("-", "|-").strip
       full_filename = "#{trimmed_filename}-#{person}-#{duration}"
 
