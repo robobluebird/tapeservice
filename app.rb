@@ -315,11 +315,17 @@ module Tape
 
       if params[:filename]
         next_position = (tape[side]['tracks'].collect { |a| a["position"] }.max || 0) + 1
+        parts = params[:filename].split(/(?<!\|)-/)
+        filename = parts[0].gsub("\-", "-")
+        person   = parts[1].gsub("\-", "-")
 
-        item = { position: next_position,
-                 name: params[:filename],
-                 nice_name: params[:filename].split(/(?<!\|)-/).first.gsub("|-", "-"),
-                 ticks: params[:ticks].to_i }
+        item = {
+          position: next_position,
+          name: params[:filename],
+          nice_name: filename,
+          ticks: params[:ticks].to_i,
+          person: person
+        }
 
         tape[side]['tracks'] << item
       end
