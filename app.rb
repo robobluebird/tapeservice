@@ -100,7 +100,7 @@ module Tape
 
     get '/.well-known/acme-challenge/A0JHThcgsugVe0g-yzI9ndtmi7hUZLNEgfGxgMb7BvU' do
         file = Tempfile.new
-        file.write 'A0JHThcgsugVe0g-yzI9ndtmi7hUZLNEgfGxgMb7BvU.I29qTsHn6f5driGPJ9UI5MdDLNGxfM35vhBER3DRoxk'
+        file.write "6c-4odYiS1sY8tFQ-whT-iBDJd8J9ITEq3XPee_XU9Q.I29qTsHn6f5driGPJ9UI5MdDLNGxfM35vhBER3DRoxk"
         file.rewind
         send_file file.path
     end
