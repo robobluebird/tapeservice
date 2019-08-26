@@ -98,6 +98,18 @@ module Tape
       end
     end
 
+    get '/.well-known/acme-challenge/A0JHThcgsugVe0g-yzI9ndtmi7hUZLNEgfGxgMb7BvU' do
+        file = Tempfile.new
+
+        begin
+          file.write 'A0JHThcgsugVe0g-yzI9ndtmi7hUZLNEgfGxgMb7BvU.I29qTsHn6f5driGPJ9UI5MdDLNGxfM35vhBER3DRoxk'
+          send_file file
+        ensure
+          file.close
+          file.unlink
+        end
+    end
+
     get '/' do
       redirect to '/tapes'
     end
