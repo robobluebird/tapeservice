@@ -1,0 +1,42 @@
+<script src="https://embed.twitch.tv/embed/v1.js"></script>
+<h1 style="text-align: center" id="greeting">c a s s e t t e b o t</h1>
+<div style="text-align: center" id="twitch-embed"></div>
+<div style="margin: auto; width: 940px;" id="stats">
+  <h3>
+    <%= @tape["name"] %>
+  </h3>
+  <div>
+    <a href="/tapes/<%= @tape["name"] %>/uploads/new">upload</a>
+  </div>
+  <div>
+    <h2 class="side">side A</h2>
+    <div class="side_status"><%= side_a_status %></div>
+    <ol>
+      <% @tape["side_a"]["tracks"].each do |track| %>
+        <li><%= track["nice_name"] %> (<%= track["ticks"] %>)</li>
+      <% end %>
+    </ol>
+  </div>
+  <div>
+    <h2 class="side">side B</h2>
+    <div class="side_status"><%= side_b_status %></div>
+    <ol>
+      <% @tape["side_b"]["tracks"].each do |track| %>
+        <li><%= track["nice_name"] %> (<%= track["ticks"] %>)</li>
+      <% end %>
+    </ol>
+  </div>
+</div>
+<script type="text/javascript">
+  var embed = new Twitch.Embed("twitch-embed", {
+    channel: "robobluebird",
+    layout: "video",
+    width: 960,
+    height: 540
+  });
+
+  embed.addEventListener(Twitch.Embed.VIDEO_READY, function() {
+    console.log("The video is ready");
+  });
+</script>
+

@@ -99,14 +99,19 @@ module Tape
     end
 
     get "/.well-known/acme-challenge/6c-4odYiS1sY8tFQ-whT-iBDJd8J9ITEq3XPee_XU9Q" do
-        file = Tempfile.new
-        file.write "6c-4odYiS1sY8tFQ-whT-iBDJd8J9ITEq3XPee_XU9Q.I29qTsHn6f5driGPJ9UI5MdDLNGxfM35vhBER3DRoxk"
-        file.rewind
-        send_file file.path
+      file = Tempfile.new
+      file.write "6c-4odYiS1sY8tFQ-whT-iBDJd8J9ITEq3XPee_XU9Q.I29qTsHn6f5driGPJ9UI5MdDLNGxfM35vhBER3DRoxk"
+      file.rewind
+      send_file file.path
     end
 
-    get '/' do
-      redirect to '/tapes'
+    get "/" do
+      info_bucket = bucket.object "inst/curr"
+      info = JSON.parse info_bucket.get.body.read
+      tape_name = info["current_tape"]
+      params[:tape_id] = tape_name
+      tape
+      erb :main
     end
 
     get '/tapes/:tape_id/uploads/new' do
