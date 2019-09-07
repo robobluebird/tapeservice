@@ -1,13 +1,11 @@
 <h1><%= @tape['name'] %></h1>
-<div class="centered bumped">
-  upload a track
-</div>
+<h2>upload a track</h2>
 <% if @error %>
-  <div class="error">
+  <div>
     <%= @error %>
   </div>
 <% end %>
-<div class="centered bumped">
+<div>
   <form action="/tapes/<%= @tape['name'] %>/uploads" method="POST" enctype="multipart/form-data">
     <input type="file" name="file">
     <br />
@@ -18,7 +16,10 @@
     <input type="submit">
   </form>
 </div>
-<div style="display: none;" class="centered bumped">
+<div>
+  <a href="/">back</a>
+</div>
+<div style="display: none;">
   or record a message
 </div>
 <div style="display: none;" class="centered bumped">
