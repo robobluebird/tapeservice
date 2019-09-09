@@ -1,54 +1,55 @@
 <h1><%= @tape['name'] %></h1>
-<h2>upload a track</h2>
-<% if @error %>
-  <div>
-    <%= @error %>
-  </div>
-<% end %>
-<div>
-  <form action="/tapes/<%= @tape['name'] %>/uploads" method="POST" enctype="multipart/form-data">
-    <input type="file" name="file">
-    <br />
-    <input type="text" name="person" placeholder="who are you?" />
-    <br />
-    <input type="password" name="password" placeholder="password" />
-    <br />
-    <input type="submit">
-  </form>
-</div>
-<div>
-  <a href="/">back</a>
-</div>
-<div style="display: none;">
-  or record a message
-</div>
-<div style="display: none;" class="centered bumped">
-  <section class="main-controls">
-    <div id="buttons">
-      <button class="record">Record</button>
-      <button class="stop">Stop</button>
-      <button class="submit">Submit</button>
+<div class="centered">
+  <h2>upload a track</h2>
+  <% if @error %>
+    <div>
+      <%= @error %>
     </div>
-  </section>
+  <% end %>
+  <div>
+    <form action="/tapes/<%= @tape['name'] %>/uploads" method="POST" enctype="multipart/form-data">
+      <input type="file" name="file">
+      <br />
+      <input type="text" name="person" placeholder="who are you?" />
+      <br />
+      <input type="password" name="password" placeholder="password" />
+      <br />
+      <input type="submit">
+    </form>
+  </div>
+  <div>
+    <a href="/">back</a>
+  </div>
+  <div style="display: none;">
+    or record a message
+  </div>
+  <div style="display: none;" class="centered bumped">
+    <section class="main-controls">
+      <div id="buttons">
+        <button class="record">Record</button>
+        <button class="stop">Stop</button>
+        <button class="submit">Submit</button>
+      </div>
+    </section>
 
-  <section class="sound-clips">
-  </section>
-</div>
-<!--
-<script>
-  let record = document.querySelector('.record');
+    <section class="sound-clips">
+    </section>
+  </div>
+  <!--
+    <script>
+      let record = document.querySelector('.record');
   let stop = document.querySelector('.stop');
   let submit = document.querySelector('.submit');
   let soundClips = document.querySelector('.sound-clips');
   let canvas = document.querySelector('.visualizer');
   let mainSection = document.querySelector('.main-controls');
 
-  // disable stop button while not recording
+      // disable stop button while not recording
 
   stop.disabled = true;
   submit.disabled = true;
 
-  //main block for doing the audio recording
+      //main block for doing the audio recording
 
   if (navigator.mediaDevices.getUserMedia) {
     console.log('getUserMedia supported.');
@@ -126,5 +127,6 @@
   } else {
     console.log('getUserMedia not supported on your browser!');
   }
-</script> -->
+    </script> -->
 
+</div>

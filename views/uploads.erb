@@ -1,14 +1,16 @@
 <h1><%= @tape["name"] %></h1>
-<h2>queued uploads</h2>
-<div>
-  <ol>
-    <% @uploads.each do |upload| %>
-      <li>
-        <%= upload.split(/(?<!\|)-/).first.gsub("|-", "-") %>
-      </li>
-    <% end %>
-  </ol>
-</div>
-<div>
-  <a href="/">back</a>
+<div class="centered">
+  <h2>queued uploads</h2>
+  <div>
+    <ol>
+      <% @uploads.each do |upload| %>
+        <li>
+          <%= upload.split(/(?<!\|)-/).first.gsub("|-", "-") %>
+        </li>
+      <% end %>
+    </ol>
+  </div>
+  <div>
+    <a href="/">back</a>
+  </div>
 </div>
