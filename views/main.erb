@@ -9,8 +9,8 @@
     <a href="/tapes/<%= @tape["name"] %>/uploads/new">upload</a>
   </div>
   <div>
-    <h3>side A</h3>
-    <div><%= side_a_status %></div>
+    <h3 style="display: inline-block;">side A</h3>
+    <div style="display: inline-block;"><%= side_a_status %></div>
     <ol>
       <% @tape["side_a"]["tracks"].each do |track| %>
         <li><%= track["nice_name"] %> (<%= track["ticks"] %>)</li>
@@ -18,8 +18,8 @@
     </ol>
   </div>
   <div>
-    <h3>side B</h3>
-    <div><%= side_b_status %></div>
+    <h3 style="display: inline-block;">side B</h3>
+    <div style="display: inline-block;"><%= side_b_status %></div>
     <ol>
       <% @tape["side_b"]["tracks"].each do |track| %>
         <li><%= track["nice_name"] %> (<%= track["ticks"] %>)</li>
