@@ -25,7 +25,7 @@ GEM
     faye-websocket (0.10.9)
       eventmachine (>= 0.12.0)
       websocket-driver (>= 0.5.1)
-    jmespath (1.4.0)
+    jmespath (1.6.1)
     multi_json (1.13.1)
     mustermann (1.0.3)
     nio4r (2.5.1)
